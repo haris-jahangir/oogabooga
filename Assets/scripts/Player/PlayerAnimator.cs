@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 ///   Speed (float)    - absolute horizontal speed
 ///   Grounded (bool)  - standing on ground
 ///   VelocityY (float)- vertical speed
-///   Scared (bool)    - plays the Fear animation
+///   Scared (bool)    - plays the Scare animation
 /// </summary>
 [RequireComponent(typeof(Animator), typeof(SpriteRenderer), typeof(PlayerMovement))]
 public class PlayerAnimator : MonoBehaviour
@@ -19,16 +19,16 @@ public class PlayerAnimator : MonoBehaviour
 
     [Tooltip("Set if the source images face left instead of right.")]
     [SerializeField] bool spritesFaceLeft = false;
-    [Tooltip("Stop the player from moving while the Fear animation plays.")]
+    [Tooltip("Stop the player from moving while the Scare animation plays.")]
     [SerializeField] bool freezeWhileScared = true;
-    [Tooltip("Press this key in Play mode to toggle fear, for testing. Set to None to disable.")]
-    [SerializeField] Key debugFearKey = Key.F;
+    [Tooltip("Press this key in Play mode to toggle the Scare animation, for testing. Set to None to disable.")]
+    [SerializeField] Key debugScareKey = Key.F;
 
     Animator animator;
     SpriteRenderer spriteRenderer;
     PlayerMovement movement;
 
-    /// <summary>True while the Fear animation is active.</summary>
+    /// <summary>True while the Scare animation is active.</summary>
     public bool IsScared { get; private set; }
 
     void Awake()
@@ -38,7 +38,7 @@ public class PlayerAnimator : MonoBehaviour
         movement = GetComponent<PlayerMovement>();
     }
 
-    /// <summary>Start or stop the Fear animation. Call this from enemies, triggers, etc.</summary>
+    /// <summary>Start or stop the Scare animation. Call this from enemies, triggers, etc.</summary>
     public void SetScared(bool scared)
     {
         IsScared = scared;
@@ -49,7 +49,7 @@ public class PlayerAnimator : MonoBehaviour
 
     void Update()
     {
-        if (debugFearKey != Key.None && Keyboard.current != null && Keyboard.current[debugFearKey].wasPressedThisFrame)
+        if (debugScareKey != Key.None && Keyboard.current != null && Keyboard.current[debugScareKey].wasPressedThisFrame)
             SetScared(!IsScared);
 
         Vector2 velocity = movement.Velocity;

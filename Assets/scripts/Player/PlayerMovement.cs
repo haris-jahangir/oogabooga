@@ -46,7 +46,7 @@ public class PlayerMovement : MonoBehaviour
     /// <summary>Current velocity of the rigidbody.</summary>
     public Vector2 Velocity => rb.linearVelocity;
 
-    /// <summary>When false, input is ignored (e.g. while the player is frozen in fear).</summary>
+    /// <summary>When false, input is ignored (e.g. while the player is scared).</summary>
     public bool CanMove { get; set; } = true;
 
     void Awake()

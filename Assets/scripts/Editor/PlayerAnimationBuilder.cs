@@ -7,29 +7,30 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
-/// Builds the player's animation clips and Animator Controller from frame images.
+/// Builds the player's animation clips and Animator Controller from PNG frames.
 ///
-/// 1. Drop frames into Assets/Art/Player/Walk, Jump, Fear (and optionally Idle).
+/// 1. Drop 4 PNGs into each of Assets/Art/Player/Idle, Walk, Jump, Scare.
 ///    Frames play in file-name order, e.g. walk_1.png, walk_2.png, ...
 /// 2. Run Tools > Player > Build Animations.
 ///
-/// Clips are written to Assets/Animations/Player and the controller is assigned
-/// to the "player" object in the open scene (adding PlayerMovement/PlayerAnimator if missing).
-/// Re-run any time you change the images.
+/// Clips are written to Assets/Animations/Player, Assets/Animations/Player.controller is
+/// filled in, and it is assigned to the "player" object in the open scene (adding
+/// PlayerMovement/PlayerAnimator if missing). Re-run any time you change the images.
 /// </summary>
 public static class PlayerAnimationBuilder
 {
     const string ArtRoot = "Assets/Art/Player";
-    const string OutputRoot = "Assets/Animations/Player";
-    const string ControllerPath = OutputRoot + "/Player.controller";
+    const string ClipRoot = "Assets/Animations/Player";
+    const string ControllerPath = "Assets/Animations/Player.controller";
     const string PlayerObjectName = "player";
     const float FramesPerSecond = 8f;
     const float WalkSpeedThreshold = 0.1f;
+    static readonly string[] AnimationNames = { "Idle", "Walk", "Jump", "Scare" };
 
     [MenuItem("Tools/Player/Create Art Folders")]
     public static void CreateArtFolders()
     {
-        foreach (string name in new[] { "Idle", "Walk", "Jump", "Fear" })
+        foreach (string name in AnimationNames)
             EnsureFolder($"{ArtRoot}/{name}");
         EditorUtility.FocusProjectWindow();
         Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(ArtRoot);
@@ -39,41 +40,32 @@ public static class PlayerAnimationBuilder
     public static void Build()
     {
         CreateArtFolders();
-        EnsureFolder(OutputRoot);
+        EnsureFolder(ClipRoot);
 
-        Sprite[] walk = LoadFrames("Walk");
-        Sprite[] jump = LoadFrames("Jump");
-        Sprite[] fear = LoadFrames("Fear");
-        Sprite[] idle = LoadFrames("Idle");
-
-        var missing = new List<string>();
-        if (walk.Length == 0) missing.Add("Walk");
-        if (jump.Length == 0) missing.Add("Jump");
-        if (fear.Length == 0) missing.Add("Fear");
-        if (missing.Count > 0)
+        var frames = AnimationNames.ToDictionary(n => n, LoadFrames);
+        string[] missing = AnimationNames.Where(n => frames[n].Length == 0).ToArray();
+        if (missing.Length > 0)
         {
             EditorUtility.DisplayDialog("Player Animations",
-                $"No images found in: {string.Join(", ", missing.Select(m => $"{ArtRoot}/{m}"))}\n\n" +
+                $"No PNGs found in: {string.Join(", ", missing.Select(m => $"{ArtRoot}/{m}"))}
+
+" +
                 "Add the frame images and run Build Animations again.", "OK");
             return;
         }
 
-        // No dedicated idle frames: stand still on the first walk frame.
-        if (idle.Length == 0)
-            idle = new[] { walk[0] };
+        AnimationClip idleClip = WriteClip("Idle", frames["Idle"], loop: true);
+        AnimationClip walkClip = WriteClip("Walk", frames["Walk"], loop: true);
+        AnimationClip jumpClip = WriteClip("Jump", frames["Jump"], loop: false);
+        AnimationClip scareClip = WriteClip("Scare", frames["Scare"], loop: true);
 
-        AnimationClip idleClip = WriteClip("Idle", idle, loop: true);
-        AnimationClip walkClip = WriteClip("Walk", walk, loop: true);
-        AnimationClip jumpClip = WriteClip("Jump", jump, loop: false);
-        AnimationClip fearClip = WriteClip("Fear", fear, loop: true);
-
-        AnimatorController controller = BuildController(idleClip, walkClip, jumpClip, fearClip);
-        bool assigned = AssignToPlayer(controller, idle[0]);
+        AnimatorController controller = BuildController(idleClip, walkClip, jumpClip, scareClip);
+        bool assigned = AssignToPlayer(controller, frames["Idle"][0]);
 
         AssetDatabase.SaveAssets();
         Selection.activeObject = controller;
-        Debug.Log($"[PlayerAnimationBuilder] Built {ControllerPath} " +
-                  $"(Idle {idle.Length}, Walk {walk.Length}, Jump {jump.Length}, Fear {fear.Length} frames)." +
+        Debug.Log($"[PlayerAnimationBuilder] Built {ControllerPath} (" +
+                  string.Join(", ", AnimationNames.Select(n => $"{n} {frames[n].Length}")) + " frames)." +
                   (assigned ? $" Assigned to '{PlayerObjectName}' - save the scene to keep it." : $" No '{PlayerObjectName}' object found in the open scene."));
     }
 
@@ -115,7 +107,7 @@ public static class PlayerAnimationBuilder
 
     static AnimationClip WriteClip(string name, Sprite[] frames, bool loop)
     {
-        string path = $"{OutputRoot}/{name}.anim";
+        string path = $"{ClipRoot}/{name}.anim";
         var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
         if (clip == null)
         {
@@ -141,12 +133,17 @@ public static class PlayerAnimationBuilder
         return clip;
     }
 
-    static AnimatorController BuildController(AnimationClip idle, AnimationClip walk, AnimationClip jump, AnimationClip fear)
+    static AnimatorController BuildController(AnimationClip idle, AnimationClip walk, AnimationClip jump, AnimationClip scare)
     {
-        if (AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath) != null)
-            AssetDatabase.DeleteAsset(ControllerPath);
+        // Rebuild the existing controller in place so anything already referencing it keeps working.
+        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath)
+            ?? AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
+        if (controller.layers.Length == 0)
+            controller.AddLayer("Base Layer");
+        foreach (AnimatorControllerParameter p in controller.parameters)
+            controller.RemoveParameter(p);
+        ClearStateMachine(controller.layers[0].stateMachine);
 
-        AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
         controller.AddParameter("Speed", AnimatorControllerParameterType.Float);
         controller.AddParameter("Grounded", AnimatorControllerParameterType.Bool);
         controller.AddParameter("VelocityY", AnimatorControllerParameterType.Float);
@@ -159,11 +156,11 @@ public static class PlayerAnimationBuilder
         AnimatorState idleState = sm.AddState("Idle", new Vector3(300, 0));
         AnimatorState walkState = sm.AddState("Walk", new Vector3(300, 120));
         AnimatorState jumpState = sm.AddState("Jump", new Vector3(550, 60));
-        AnimatorState fearState = sm.AddState("Fear", new Vector3(50, 200));
+        AnimatorState scareState = sm.AddState("Scare", new Vector3(50, 200));
         idleState.motion = idle;
         walkState.motion = walk;
         jumpState.motion = jump;
-        fearState.motion = fear;
+        scareState.motion = scare;
         sm.defaultState = idleState;
 
         // Idle <-> Walk
@@ -177,14 +174,24 @@ public static class PlayerAnimationBuilder
         Instant(walkState.AddTransition(jumpState)).AddCondition(AnimatorConditionMode.IfNot, 0, "Grounded");
         Instant(jumpState.AddTransition(idleState)).AddCondition(AnimatorConditionMode.If, 0, "Grounded");
 
-        // Fear overrides everything until Scared is cleared.
-        AnimatorStateTransition toFear = Instant(sm.AddAnyStateTransition(fearState));
-        toFear.canTransitionToSelf = false;
-        toFear.AddCondition(AnimatorConditionMode.If, 0, "Scared");
-        Instant(fearState.AddTransition(idleState)).AddCondition(AnimatorConditionMode.IfNot, 0, "Scared");
+        // Scare overrides everything until Scared is cleared.
+        AnimatorStateTransition toScare = Instant(sm.AddAnyStateTransition(scareState));
+        toScare.canTransitionToSelf = false;
+        toScare.AddCondition(AnimatorConditionMode.If, 0, "Scared");
+        Instant(scareState.AddTransition(idleState)).AddCondition(AnimatorConditionMode.IfNot, 0, "Scared");
 
         EditorUtility.SetDirty(controller);
         return controller;
+    }
+
+    static void ClearStateMachine(AnimatorStateMachine sm)
+    {
+        foreach (AnimatorStateTransition t in sm.anyStateTransitions)
+            sm.RemoveAnyStateTransition(t);
+        foreach (ChildAnimatorState s in sm.states)
+            sm.RemoveState(s.state);
+        foreach (ChildAnimatorStateMachine child in sm.stateMachines)
+            sm.RemoveStateMachine(child.stateMachine);
     }
 
     static AnimatorStateTransition Instant(AnimatorStateTransition t)
