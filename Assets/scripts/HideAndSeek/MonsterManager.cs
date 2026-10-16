@@ -2,13 +2,14 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Runs the hide-and-seek loop:
 ///   1. Wait a random 5-10 seconds.
 ///   2. Warning: lights flicker, the player plays the Scare animation and the warning
-///      sound plays. The warning lasts as long as the warning sound (1 second if none).
-///   3. The monster appears. If the player is not inside a HidingSpot at any moment
+///      sound plays. The flicker lasts Warning Duration seconds (the sound may run on).
+///   3. The monster appears above the player, 1-5 units to one side, never in fire. If the player is not inside a HidingSpot at any moment
 ///      while it is there, it's game over and the scene restarts.
 ///   4. The monster leaves and the loop repeats.
 /// </summary>
@@ -26,10 +27,18 @@ public class MonsterManager : MonoBehaviour
     [Header("Timing")]
     [SerializeField] float minDelay = 5f;
     [SerializeField] float maxDelay = 10f;
-    [Tooltip("Used only if no warning sound is set; otherwise the warning lasts as long as the sound.")]
-    [SerializeField] float fallbackWarningDuration = 1f;
+    [Tooltip("How long the lights flicker before the monster comes, in seconds.")]
+    [FormerlySerializedAs("fallbackWarningDuration")]
+    [Min(0f)] [SerializeField] float warningDuration = 1.5f;
     [Tooltip("How long the monster stays. The player must stay hidden the whole time.")]
     [SerializeField] float monsterStayDuration = 6f;
+    [Header("Spawn Position")]
+    [Tooltip("Closest the monster appears to the player, sideways, in units.")]
+    [SerializeField] float minSpawnDistance = 1f;
+    [Tooltip("Furthest the monster appears from the player, sideways, in units.")]
+    [SerializeField] float maxSpawnDistance = 5f;
+    [Tooltip("How far above the player the monster appears.")]
+    [SerializeField] float spawnHeightAbovePlayer = 1f;
     [Tooltip("Gap kept between the monster and the fire, in units.")]
     [SerializeField] float fireClearance = 0.5f;
     [Tooltip("Pause after being caught before the scene restarts.")]
@@ -52,7 +61,6 @@ public class MonsterManager : MonoBehaviour
     AudioSource audioSource;
     float[] baseIntensities;
     bool caught;
-    Vector3 monsterHome;
     Fire[] fires;
 
     void Awake()
@@ -71,10 +79,7 @@ public class MonsterManager : MonoBehaviour
 
         fires = FindObjectsByType<Fire>(FindObjectsSortMode.None);
         if (monster != null)
-        {
-            monsterHome = monster.transform.position;
             monster.SetActive(false);
-        }
     }
 
     void Start() => StartCoroutine(Loop());
@@ -95,7 +100,7 @@ public class MonsterManager : MonoBehaviour
         if (player != null)
             player.SetScared(true, freezeMovement: false);
 
-        float duration = warningSound != null ? warningSound.length : fallbackWarningDuration;
+        float duration = warningDuration;
         if (warningSound != null)
             audioSource.PlayOneShot(warningSound);
 
@@ -115,8 +120,8 @@ public class MonsterManager : MonoBehaviour
     {
         if (monster != null)
         {
-            monster.transform.position = monsterHome;
             monster.SetActive(true);
+            PlaceMonsterNearPlayer();
             KeepMonsterOutOfFire();
         }
         if (monsterSound != null)
@@ -167,6 +172,47 @@ public class MonsterManager : MonoBehaviour
 
         yield return new WaitForSeconds(restartDelay);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    /// <summary>
+    /// Puts the monster above the player, 1-5 units to the left or right.
+    /// Tries a few random spots to find one outside the fire.
+    /// </summary>
+    void PlaceMonsterNearPlayer()
+    {
+        if (player == null)
+            return;
+
+        Vector3 origin = player.transform.position;
+        Vector3 pos = monster.transform.position;
+        pos.y = origin.y + spawnHeightAbovePlayer;
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            float side = Random.value < 0.5f ? -1f : 1f;
+            pos.x = origin.x + side * Random.Range(minSpawnDistance, maxSpawnDistance);
+            monster.transform.position = pos;
+            if (!MonsterInFire())
+                return;
+        }
+        // Every try landed in fire; KeepMonsterOutOfFire pushes it clear.
+    }
+
+    bool MonsterInFire()
+    {
+        Renderer body = monster.GetComponentInChildren<Renderer>();
+        if (body == null)
+            return false;
+        Bounds m = body.bounds;
+        foreach (Fire fire in fires)
+        {
+            if (fire == null)
+                continue;
+            Bounds f = fire.Area;
+            if (m.max.x > f.min.x - fireClearance && m.min.x < f.max.x + fireClearance
+                && m.max.y > f.min.y && m.min.y < f.max.y)
+                return true;
+        }
+        return false;
     }
 
     /// <summary>
