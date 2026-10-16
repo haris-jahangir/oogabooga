@@ -6,10 +6,10 @@
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
-/[叠]uild/
-/[叠]uilds/
-/[尝]ogs/
-/[𠎀]erUserSettings/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
 /[Mm]emoryCaptures/
 
 # Asset store packages and troubleshooting tools
@@ -20,6 +20,7 @@
 .idea/
 .vscode/
 *.sln
+*.slnx
 *.csproj
 *.unityproj
 *.suo
