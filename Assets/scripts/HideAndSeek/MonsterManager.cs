@@ -30,6 +30,8 @@ public class MonsterManager : MonoBehaviour
     [SerializeField] float fallbackWarningDuration = 1f;
     [Tooltip("How long the monster stays. The player must stay hidden the whole time.")]
     [SerializeField] float monsterStayDuration = 6f;
+    [Tooltip("Gap kept between the monster and the fire, in units.")]
+    [SerializeField] float fireClearance = 0.5f;
     [Tooltip("Pause after being caught before the scene restarts.")]
     [SerializeField] float restartDelay = 1f;
 
@@ -50,6 +52,8 @@ public class MonsterManager : MonoBehaviour
     AudioSource audioSource;
     float[] baseIntensities;
     bool caught;
+    Vector3 monsterHome;
+    Fire[] fires;
 
     void Awake()
     {
@@ -65,8 +69,12 @@ public class MonsterManager : MonoBehaviour
         for (int i = 0; i < flickerLights.Length; i++)
             baseIntensities[i] = flickerLights[i].intensity;
 
+        fires = FindObjectsByType<Fire>(FindObjectsSortMode.None);
         if (monster != null)
+        {
+            monsterHome = monster.transform.position;
             monster.SetActive(false);
+        }
     }
 
     void Start() => StartCoroutine(Loop());
@@ -106,7 +114,11 @@ public class MonsterManager : MonoBehaviour
     IEnumerator MonsterVisit()
     {
         if (monster != null)
+        {
+            monster.transform.position = monsterHome;
             monster.SetActive(true);
+            KeepMonsterOutOfFire();
+        }
         if (monsterSound != null)
         {
             audioSource.clip = monsterSound;
@@ -122,11 +134,26 @@ public class MonsterManager : MonoBehaviour
                 yield break;
             }
             yield return null;
+            KeepMonsterOutOfFire(); // the fire keeps spreading during the visit
         }
 
         audioSource.Stop();
         if (monster != null)
             monster.SetActive(false);
+    }
+
+    /// <summary>
+    /// Ends the run and restarts the scene. Used by other hazards such as Fire.
+    /// </summary>
+    public void CatchPlayer()
+    {
+        if (caught)
+            return;
+        StopAllCoroutines();
+        SetLightLevel(1f);
+        if (monster != null)
+            monster.SetActive(false);
+        StartCoroutine(GameOver());
     }
 
     IEnumerator GameOver()
@@ -140,6 +167,35 @@ public class MonsterManager : MonoBehaviour
 
         yield return new WaitForSeconds(restartDelay);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    /// <summary>
+    /// If the monster overlaps a fire, move it sideways to just in front of the fire's spreading edge.
+    /// </summary>
+    void KeepMonsterOutOfFire()
+    {
+        if (monster == null || fires.Length == 0)
+            return;
+        Renderer body = monster.GetComponentInChildren<Renderer>();
+        if (body == null)
+            return;
+
+        foreach (Fire fire in fires)
+        {
+            if (fire == null)
+                continue;
+            Bounds f = fire.Area;
+            Bounds m = body.bounds;
+            bool overlapsX = m.max.x > f.min.x - fireClearance && m.min.x < f.max.x + fireClearance;
+            bool overlapsY = m.max.y > f.min.y && m.min.y < f.max.y;
+            if (!overlapsX || !overlapsY)
+                continue;
+
+            float shift = fire.GrowDirection == Fire.Direction.Right
+                ? (f.max.x + fireClearance) - m.min.x
+                : (f.min.x - fireClearance) - m.max.x;
+            monster.transform.position += new Vector3(shift, 0f, 0f);
+        }
     }
 
     void SetLightLevel(float fraction)
