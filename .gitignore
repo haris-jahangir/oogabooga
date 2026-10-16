@@ -1,0 +1,47 @@
+# =============== #
+# Unity Gitignore #
+# =============== #
+
+# Core Unity generated folders (Contains the 59,000+ temporary files)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[叠]uild/
+/[叠]uilds/
+/[尝]ogs/
+/[𠎀]erUserSettings/
+/[Mm]emoryCaptures/
+
+# Asset store packages and troubleshooting tools
+/Assets/AssetStoreTools*
+
+# Visual Studio / Rider / VS Code project files
+.vs/
+.idea/
+.vscode/
+*.sln
+*.csproj
+*.unityproj
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opendb
+*.VC.db
+
+# Reports and builds
+Build/
+Builds/
+*.apk
+*.unitypackage
+*.bundle
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
