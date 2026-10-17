@@ -1336,7 +1336,7 @@ MonoBehaviour:
   smoothTime: 0.15
   followY: 1
   useLimits: 1
-  minPosition: {x: 0.4, y: -1.1}
+  minPosition: {x: 0.4, y: -2.58}
   maxPosition: {x: 14.3, y: 3.2}
 --- !u!1 &543693202
 GameObject:
