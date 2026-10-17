@@ -4,8 +4,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// The opening of room 1: the player wakes up somewhere dark, lying on the floor. The eyelids
-/// flutter open, the view sways and clears, the player gets up, a line flickers in like a dying
-/// ember ("Where am I?"), then the player can move.
+/// flutter open, the view sways and clears, the player gets up, and "Where am I?" types itself out,
+/// seen double until the eyes focus. Then the player can move.
 /// Put it on any object in the scene. It draws its own screen overlay, so it needs no setup.
 /// </summary>
 public class WakeUpIntro : MonoBehaviour
@@ -32,6 +32,7 @@ public class WakeUpIntro : MonoBehaviour
     RectTransform topLid, bottomLid;
     Image haze;
     Text caption, captionSub;
+    Shadow ghost; // the line's double image, before the eyes focus
     float swayLeft;
 
     IEnumerator Start()
@@ -64,14 +65,22 @@ public class WakeUpIntro : MonoBehaviour
         if (body != null)
             yield return GetUp();
         Play(voiceLine);
-        yield return FadeCaption(0f, 1f, 0.6f);
+        // Typed out a letter at a time, a pause after each word, like a thought forming.
+        caption.text = "";
+        SetAlpha(caption, 1f);
+        SetAlpha(captionSub, 0.7f);
+        foreach (char c in line)
+        {
+            caption.text += c;
+            yield return new WaitForSeconds(c == ' ' ? 0.25f : 0.09f);
+        }
         if (player != null)
             player.CanMove = true;
-        // It gutters like the last of a fire while it's up.
-        for (float t = 0f; t < 2.2f; t += 0.06f)
+        // The double image wavers, then drifts back into the line as the eyes focus.
+        for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f)
         {
-            SetAlpha(caption, Random.Range(0.55f, 1f));
-            yield return new WaitForSeconds(0.06f);
+            ghost.effectDistance = new Vector2(Mathf.Lerp(18f, 0f, t * t) * (1f + Mathf.Sin(t * 30f) * 0.25f), 0f);
+            yield return null;
         }
         yield return FadeCaption(1f, 0f, 0.8f);
         Destroy(overlay);
@@ -184,6 +193,9 @@ public class WakeUpIntro : MonoBehaviour
 
         Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         caption = MakeText("Line", line, 48, font, new Vector2(0f, -120f));
+        ghost = caption.gameObject.AddComponent<Shadow>();
+        ghost.effectColor = new Color(0.8f, 0.8f, 0.85f, 0.3f);
+        ghost.effectDistance = new Vector2(18f, 0f);
         captionSub = MakeText("Subtitle", subtitle, 30, font, new Vector2(0f, -185f));
         SetAlpha(caption, 0f);
         SetAlpha(captionSub, 0f);
@@ -212,10 +224,10 @@ public class WakeUpIntro : MonoBehaviour
         text.fontSize = size;
         text.alignment = TextAnchor.MiddleCenter;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.color = new Color(0.8f, 0.3f, 0.2f); // ember, not white: it belongs to the dark
+        text.color = new Color(0.78f, 0.77f, 0.74f); // pale ash: dim, not bright white
         text.text = value;
         var outline = rt.gameObject.AddComponent<Outline>();
-        outline.effectColor = new Color(0.15f, 0.02f, 0f, 0.9f);
+        outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
         return text;
     }
 }
