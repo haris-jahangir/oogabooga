@@ -53,6 +53,7 @@ public class PlayerMovement : MonoBehaviour
     float dashEndTime = float.NegativeInfinity;
     float nextDashTime;
     bool airDashUsed;
+    float lastFallSpeed;
 
     /// <summary>True while standing on ground.</summary>
     public bool IsGrounded { get; private set; }
@@ -62,6 +63,16 @@ public class PlayerMovement : MonoBehaviour
 
     /// <summary>Current velocity of the rigidbody.</summary>
     public Vector2 Velocity => rb.linearVelocity;
+
+    /// <summary>Raised the moment a jump starts.</summary>
+    public event System.Action Jumped;
+    /// <summary>Raised on touching down, with the downward speed at impact.</summary>
+    public event System.Action<float> Landed;
+    /// <summary>Raised when a dash starts, with its direction (-1 or 1).</summary>
+    public event System.Action<float> Dashed;
+
+    /// <summary>Which way the player faces (-1 left, 1 right).</summary>
+    public float Facing => facing;
 
     /// <summary>True during a dash.</summary>
     public bool IsDashing => Time.time < dashEndTime;
@@ -125,7 +136,11 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
+        bool wasGrounded = IsGrounded;
         IsGrounded = rb.IsTouching(groundFilter);
+        if (IsGrounded && !wasGrounded)
+            Landed?.Invoke(Mathf.Max(0f, -lastFallSpeed));
+        lastFallSpeed = rb.linearVelocity.y;
         if (IsGrounded)
         {
             lastGroundedTime = Time.time;
@@ -143,6 +158,7 @@ public class PlayerMovement : MonoBehaviour
             nextDashTime = Time.time + dashCooldown;
             if (!IsGrounded)
                 airDashUsed = true;
+            Dashed?.Invoke(facing);
         }
         if (IsDashing)
         {
@@ -165,6 +181,7 @@ public class PlayerMovement : MonoBehaviour
             float gravity = Mathf.Abs(Physics2D.gravity.y * baseGravityScale);
             velocity.y = Mathf.Sqrt(2f * gravity * jumpHeight);
             lastGroundedTime = float.NegativeInfinity;
+            Jumped?.Invoke();
         }
 
         // Fall faster than you rise, for a less floaty jump.

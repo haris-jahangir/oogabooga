@@ -69,6 +69,15 @@ public class MonsterManager : MonoBehaviour
     /// <summary>True from the warning until the monster leaves. Objects can't be used meanwhile.</summary>
     public static bool IsHunting { get; private set; }
 
+    /// <summary>True while the warning (flicker, warning sound) is playing.</summary>
+    public bool InWarning { get; private set; }
+
+    /// <summary>True while the monster is visible in the scene.</summary>
+    public bool MonsterPresent => monster != null && monster.activeInHierarchy;
+
+    /// <summary>The monster object, or null.</summary>
+    public Transform Monster => monster != null ? monster.transform : null;
+
     /// <summary>True while the player is reading a clue, on the phone or at a lock.</summary>
     static bool PlayerBusy => Interactable.Blocked || ClueViewer.AnyOpen;
 
@@ -132,6 +141,7 @@ public class MonsterManager : MonoBehaviour
 
     IEnumerator Warning()
     {
+        InWarning = true;
         // Scare plays but the player can still run for a shadow.
         if (player != null)
             player.SetScared(true, freezeMovement: false);
@@ -155,6 +165,7 @@ public class MonsterManager : MonoBehaviour
 
         SetLightLevel(1f);
         flickering = false;
+        InWarning = false;
         if (player != null)
             player.SetScared(false);
     }
@@ -198,6 +209,7 @@ public class MonsterManager : MonoBehaviour
         if (caught)
             return;
         StopAllCoroutines();
+        InWarning = false;
         SetLightLevel(1f);
         audioSource.Stop();
         if (monster != null)
@@ -215,6 +227,7 @@ public class MonsterManager : MonoBehaviour
         if (caught)
             return;
         StopAllCoroutines();
+        InWarning = false;
         SetLightLevel(1f);
         if (monster != null)
             monster.SetActive(false);
