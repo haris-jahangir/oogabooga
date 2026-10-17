@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#070b1c"/><stop offset="1" stop-color="#1a2747"/></linearGradient>
+    <radialGradient id="moon" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f3efdc" stop-opacity=".55"/><stop offset="1" stop-color="#f3efdc" stop-opacity="0"/></radialGradient>
+    <linearGradient id="fire" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffb347"/><stop offset=".45" stop-color="#ff6a1a"/><stop offset="1" stop-color="#5a1405"/></linearGradient>
+    <radialGradient id="doorglow" cx="50%" cy="80%" r="60%"><stop offset="0" stop-color="#ff7a26" stop-opacity=".55"/><stop offset="1" stop-color="#ff7a26" stop-opacity="0"/></radialGradient>
+    <linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".55"/><stop offset="1" stop-color="#ffe7a8" stop-opacity=".12"/></linearGradient>
+    <radialGradient id="pool" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".5"/><stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+  <circle cx="1480" cy="190" r="190" fill="url(#moon)"/>
+  <circle cx="1480" cy="190" r="58" fill="#ece6cf"/>
+  <!-- far cranes -->
+  <g fill="#0f1830">
+    <rect x="980" y="330" width="16" height="420"/><path d="M980 330 L1250 330 L1250 346 L980 346 Z"/><path d="M996 346 L1060 420 L1052 428 L988 356 Z"/>
+    <rect x="1180" y="346" width="4" height="120"/><rect x="1166" y="466" width="32" height="18"/>
+    <rect x="760" y="420" width="12" height="330"/><path d="M700 420 L900 420 L900 432 L700 432 Z"/>
+  </g>
+  <!-- water -->
+  <rect y="880" width="1920" height="200" fill="#0c1730"/>
+  <g stroke="#3b5480" stroke-width="4" stroke-linecap="round" opacity=".6">
+    <line x1="1400" y1="930" x2="1560" y2="930"/><line x1="1440" y1="970" x2="1520" y2="970"/><line x1="900" y1="1000" x2="1060" y2="1000"/><line x1="1700" y1="1030" x2="1860" y2="1030"/>
+  </g>
+  <!-- warehouse -->
+  <g stroke="#0a0c0d" stroke-width="6" stroke-linejoin="round">
+    <path d="M-10 300 L360 170 L730 300 L730 840 L-10 840 Z" fill="#23282b"/>
+  </g>
+  <g stroke="#1a1e20" stroke-width="5">
+    <line x1="60" y1="290" x2="60" y2="840"/><line x1="130" y1="270" x2="130" y2="840"/><line x1="200" y1="245" x2="200" y2="840"/><line x1="270" y1="220" x2="270" y2="840"/><line x1="340" y1="195" x2="340" y2="840"/><line x1="410" y1="200" x2="410" y2="840"/><line x1="480" y1="225" x2="480" y2="840"/><line x1="550" y1="250" x2="550" y2="840"/><line x1="620" y1="275" x2="620" y2="840"/><line x1="690" y1="295" x2="690" y2="840"/>
+  </g>
+  <text x="360" y="330" font-family="Georgia, serif" font-weight="bold" font-size="130" fill="#cfc8b4" text-anchor="middle" opacity=".9">3</text>
+  <!-- open door with fire inside -->
+  <ellipse cx="555" cy="820" rx="300" ry="120" fill="url(#doorglow)"/>
+  <rect x="470" y="560" width="170" height="280" fill="url(#fire)" stroke="#0a0c0d" stroke-width="6"/>
+  <path d="M480 840 C500 760 520 800 530 720 C545 790 560 700 575 760 C590 690 610 780 630 840 Z" fill="#ffcf6b" opacity=".85"/>
+  <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="14"/></filter>
+  <g fill="#4a4a55" opacity=".5" filter="url(#blur)"><circle cx="540" cy="520" r="46"/><circle cx="590" cy="460" r="58"/><circle cx="560" cy="390" r="66"/><circle cx="620" cy="320" r="72"/></g>
+  <!-- dock -->
+  <rect x="-10" y="840" width="1940" height="44" fill="#3b2f28" stroke="#140f0c" stroke-width="6"/>
+  <g stroke="#241c18" stroke-width="4"><line x1="160" y1="840" x2="160" y2="884"/><line x1="420" y1="840" x2="420" y2="884"/><line x1="700" y1="840" x2="700" y2="884"/><line x1="980" y1="840" x2="980" y2="884"/><line x1="1260" y1="840" x2="1260" y2="884"/><line x1="1540" y1="840" x2="1540" y2="884"/><line x1="1800" y1="840" x2="1800" y2="884"/></g>
+  <g fill="#241c18" stroke="#140f0c" stroke-width="5"><rect x="250" y="884" width="34" height="196"/><rect x="900" y="884" width="34" height="196"/><rect x="1560" y="884" width="34" height="196"/></g>
+  <!-- street lamp: the light -->
+  <path d="M1690 330 L1580 840 L1900 840 L1790 330 Z" fill="url(#cone)"/>
+  <ellipse cx="1740" cy="842" rx="230" ry="40" fill="url(#pool)"/>
+  <g stroke="#0a0c0d" stroke-width="6" stroke-linejoin="round">
+    <rect x="1730" y="300" width="20" height="540" fill="#2a2f33"/>
+    <path d="M1700 300 L1780 300 L1770 270 L1710 270 Z" fill="#2a2f33"/>
+    <rect x="1712" y="300" width="56" height="26" rx="6" fill="#fff1c2"/>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <radialGradient id="vig" cx="50%" cy="50%" r="75%"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".95"/></radialGradient>
+    <radialGradient id="sw" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#66e6ff" stop-opacity=".8"/><stop offset="1" stop-color="#66e6ff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#05070c"/>
+  <!-- inside the warehouse, seen through the glass -->
+  <rect x="300" y="160" width="1320" height="760" fill="#0b1220"/>
+  <rect x="300" y="760" width="1320" height="160" fill="#101826"/>
+  <line x1="300" y1="760" x2="1620" y2="760" stroke="#1d2a3c" stroke-width="5"/>
+  <!-- the glowing switch on the wall, just like the start -->
+  <circle cx="560" cy="640" r="70" fill="url(#sw)"/>
+  <rect x="546" y="618" width="28" height="44" rx="5" fill="#66e6ff"/>
+  <!-- someone lying on the floor -->
+  <g fill="#1c2433" stroke="#04060a" stroke-width="5">
+    <ellipse cx="1000" cy="752" rx="150" ry="22"/>
+    <circle cx="860" cy="738" r="24"/>
+  </g>
+  <!-- window frame, outside looking in -->
+  <g fill="none" stroke="#1c1712" stroke-width="40">
+    <rect x="300" y="160" width="1320" height="760"/>
+    <line x1="960" y1="160" x2="960" y2="920"/><line x1="300" y1="540" x2="1620" y2="540"/>
+  </g>
+  <!-- grime and rain on the glass -->
+  <g stroke="#9db3d6" stroke-width="3" opacity=".18" stroke-linecap="round">
+    <line x1="420" y1="200" x2="410" y2="320"/><line x1="700" y1="260" x2="690" y2="400"/><line x1="1100" y1="200" x2="1092" y2="300"/><line x1="1350" y1="600" x2="1340" y2="760"/><line x1="820" y1="580" x2="812" y2="700"/><line x1="1500" y1="220" x2="1490" y2="380"/>
+  </g>
+  <rect width="1920" height="1080" fill="url(#vig)"/>
+</svg>
