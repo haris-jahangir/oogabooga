@@ -45,12 +45,6 @@ def pose(sx=1.0, sy=1.0, angle=0.0, lift=0.0, dx=0.0, image=src):
     return canvas
 
 
-def tint(im, rgb, amount):
-    a = np.asarray(im).astype(float)
-    a[..., :3] = a[..., :3] * (1 - amount) + np.array(rgb) * amount
-    return Image.fromarray(a.astype(np.uint8))
-
-
 def save(frames, folder, name):
     (OUT / folder).mkdir(parents=True, exist_ok=True)
     for i, f in enumerate(frames):
@@ -83,8 +77,17 @@ for i in range(4):
     canvas.alpha_composite(big, (round(FEET[0] - hat_x(j) * scale), FEET[1] - BODY))
     jump_frames.append(canvas)
 save(jump_frames, "Player", "Player_Jump")
-pale = tint(src, (170, 190, 235), 0.25)
-save([pose(1.04, 0.94, 0, 0, d, pale) for d in (-4, 4, -3, 3)], "Player", "Player_Scare")
+# The artist's scare (Scare/Scare_0..3): flinching, hands up. It loops while the shadow is near and
+# the player can't move, so every frame stands on the ground; the side-to-side lean stays as drawn.
+scare = [Image.open(HERE / f"Scare/Scare_{i}.png").convert("RGBA") for i in range(4)]
+scare_x = np.mean([hat_x(f.crop((0, f.getbbox()[1], f.width, f.height))) for f in scare])
+scare_frames = []
+for f in scare:
+    big = resize(f, f.width * scale, f.height * scale)
+    canvas = Image.new("RGBA", CANVAS)
+    canvas.alpha_composite(big, (round(FEET[0] - scare_x * scale), round(FEET[1] - f.getbbox()[3] * scale)))
+    scare_frames.append(canvas)
+save(scare_frames, "Player", "Player_Scare")
 
 # ---- shadow: the same silhouette, made of smoke, with the player's eyes ----
 SH_BODY, PAD = 192, 28
