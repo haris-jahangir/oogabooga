@@ -60,6 +60,7 @@ public class MonsterManager : MonoBehaviour
 
     AudioSource audioSource;
     float[] baseIntensities;
+    bool flickering; // baseIntensities only hold real values during a warning
     bool caught;
     Fire[] fires;
 
@@ -71,11 +72,11 @@ public class MonsterManager : MonoBehaviour
         if (player == null)
             player = FindFirstObjectByType<PlayerAnimator>();
         if (flickerLights == null || flickerLights.Length == 0)
-            flickerLights = FindObjectsByType<Light2D>(FindObjectsSortMode.None);
+            // Lamps flicker through Lamp.GlobalLevel instead, since they set their own brightness.
+            flickerLights = System.Array.FindAll(FindObjectsByType<Light2D>(FindObjectsSortMode.None),
+                l => l.GetComponent<Lamp>() == null);
 
         baseIntensities = new float[flickerLights.Length];
-        for (int i = 0; i < flickerLights.Length; i++)
-            baseIntensities[i] = flickerLights[i].intensity;
 
         fires = FindObjectsByType<Fire>(FindObjectsSortMode.None);
         if (monster != null)
@@ -100,6 +101,12 @@ public class MonsterManager : MonoBehaviour
         if (player != null)
             player.SetScared(true, freezeMovement: false);
 
+        // Flicker around the lights' current brightness (it changes when the switch turns them on).
+        for (int i = 0; i < flickerLights.Length; i++)
+            if (flickerLights[i] != null)
+                baseIntensities[i] = flickerLights[i].intensity;
+        flickering = true;
+
         float duration = warningDuration;
         if (warningSound != null)
             audioSource.PlayOneShot(warningSound);
@@ -112,6 +119,7 @@ public class MonsterManager : MonoBehaviour
         }
 
         SetLightLevel(1f);
+        flickering = false;
         if (player != null)
             player.SetScared(false);
     }
@@ -263,6 +271,9 @@ public class MonsterManager : MonoBehaviour
 
     void SetLightLevel(float fraction)
     {
+        if (!flickering)
+            return;
+        Lamp.GlobalLevel = fraction;
         for (int i = 0; i < flickerLights.Length; i++)
             if (flickerLights[i] != null)
                 flickerLights[i].intensity = baseIntensities[i] * fraction;

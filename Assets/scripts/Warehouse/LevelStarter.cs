@@ -23,6 +23,9 @@ public class LevelStarter : MonoBehaviour
     /// <summary>True once the switch has been used.</summary>
     public bool HasStarted => started;
 
+    /// <summary>Raised when the switch is used (lights, music and fire sound listen for this).</summary>
+    public event System.Action Started;
+
     void Awake()
     {
         if (startOnSwitch == null || startOnSwitch.Length == 0)
@@ -54,6 +57,7 @@ public class LevelStarter : MonoBehaviour
             if (b != null)
                 b.enabled = true;
         StartCoroutine(FadeFog());
+        Started?.Invoke();
     }
 
     IEnumerator FadeFog()
