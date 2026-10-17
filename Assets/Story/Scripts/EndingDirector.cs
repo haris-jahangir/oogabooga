@@ -45,6 +45,11 @@ public class EndingDirector : MonoBehaviour
     [Header("Sound (optional)")]
     public AudioClip shadowAppears;
     public AudioClip darkSting;
+    [Tooltip("Fire crackle from the warehouse door; gets quieter as the player walks away.")]
+    public AudioClip fireLoop;
+    [Tooltip("Music under the conversation with the shadow.")]
+    public AudioClip music;
+    [Range(0f, 1f)] public float musicVolume = 0.5f;
 
     [Header("Framing")]
     [Tooltip("The backdrop's size in units. The camera always shows all of it, whatever the window shape.")]
@@ -53,11 +58,13 @@ public class EndingDirector : MonoBehaviour
     Image fade, box;
     Text speakerText, lineText, captionText, titleText, subTitleText, hintText;
     Text[] choiceTexts;
-    AudioSource sfx;
+    AudioSource sfx, fireSource, musicSource;
 
     IEnumerator Start()
     {
         sfx = gameObject.AddComponent<AudioSource>();
+        fireSource = Loop(fireLoop, 0.9f);
+        musicSource = Loop(music, 0f);
         BuildUI();
         SetAlpha(hospital, 0f);
         SetAlpha(shadowView, 0f);
@@ -69,6 +76,7 @@ public class EndingDirector : MonoBehaviour
         yield return new WaitForSeconds(0.6f);
 
         Play(shadowAppears);
+        StartCoroutine(FadeAudio(musicSource, musicVolume, 3f));
         yield return FadeSprite(shadow, 0f, 1f, 1.4f);
         yield return new WaitForSeconds(0.5f);
 
@@ -97,6 +105,8 @@ public class EndingDirector : MonoBehaviour
     IEnumerator DarkEnding()
     {
         yield return Walk(shadowX - 0.7f, 1.6f);
+        StartCoroutine(FadeAudio(musicSource, 0f, 2f));
+        StartCoroutine(FadeAudio(fireSource, 0f, 2f));
         Play(darkSting);
         yield return FadeScreen(Color.black, 0f, 1f, 1.6f);
         yield return Caption(darkCaption1, 2.6f);
@@ -112,7 +122,9 @@ public class EndingDirector : MonoBehaviour
     {
         // Straight past the shadow and into the lamp's light; the shadow can't follow.
         StartCoroutine(ShadowRecoils());
+        StartCoroutine(FadeAudio(musicSource, 0f, 3f));
         yield return Walk(lampX, 3.2f);
+        StartCoroutine(FadeAudio(fireSource, 0f, 1f));
         yield return FadeScreen(Color.white, 0f, 1f, 1.4f);
         StartCoroutine(HeartMonitor());
         SetAlpha(docks, 0f); SetAlpha(player, 0f); SetAlpha(shadow, 0f);
@@ -140,6 +152,41 @@ public class EndingDirector : MonoBehaviour
         yield return FadeTexts(0f, 1f, 1.2f, titleText, subTitleText, hintText);
         yield return WaitForAdvance();
         SceneManager.LoadScene(0);
+    }
+
+    // The crackle fades with distance from the burning door.
+    void Update()
+    {
+        if (fireSource != null && fireSource.volume > 0f && player != null)
+        {
+            float d = Mathf.Abs(player.transform.position.x - doorX);
+            fireSource.volume = Mathf.Min(fireSource.volume, Mathf.Lerp(0.9f, 0.15f, d / 6f));
+        }
+    }
+
+    AudioSource Loop(AudioClip clip, float volume)
+    {
+        if (clip == null)
+            return null;
+        var src = gameObject.AddComponent<AudioSource>();
+        src.clip = clip;
+        src.loop = true;
+        src.volume = volume;
+        src.Play();
+        return src;
+    }
+
+    static IEnumerator FadeAudio(AudioSource src, float to, float seconds)
+    {
+        if (src == null)
+            yield break;
+        float from = src.volume;
+        for (float k = 0f; k < 1f; k += Time.deltaTime / seconds)
+        {
+            src.volume = Mathf.Lerp(from, to, k);
+            yield return null;
+        }
+        src.volume = to;
     }
 
     // ---- dialogue ----

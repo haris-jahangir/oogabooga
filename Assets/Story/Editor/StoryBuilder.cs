@@ -62,6 +62,8 @@ public static class StoryBuilder
         director.player = Sprite("Player", "Story_Player", new Vector3(director.doorX, floorY, 0f), 5);
         director.shadowAppears = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/sfx/eeerie sound.mp3");
         director.darkSting = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/sfx/monster sound.mp3");
+        director.fireLoop = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/sfx/fire sfx.mp3");
+        director.music = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/music/horror musiic.mp3");
 
         EditorSceneManager.SaveScene(scene, "Assets/Story/Scenes/Ending.unity");
         Debug.Log("STORY ending scene saved");
@@ -72,8 +74,9 @@ public static class StoryBuilder
     {
         if (AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab) == null)
             BuildOpening();
-        // A copy of room 1 with the opening dropped in, so the real scene stays untouched.
-        AssetDatabase.CopyAsset("Assets/Scenes/Scene0.unity", "Assets/Story/Scenes/OpeningTest.unity");
+        // A copy of room 1 (Scene1) with the opening dropped in, so the real scene stays untouched.
+        AssetDatabase.DeleteAsset("Assets/Story/Scenes/OpeningTest.unity");
+        AssetDatabase.CopyAsset("Assets/Scenes/Scene1.unity", "Assets/Story/Scenes/OpeningTest.unity");
         var scene = EditorSceneManager.OpenScene("Assets/Story/Scenes/OpeningTest.unity");
         PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab), scene);
         EditorSceneManager.SaveScene(scene);
