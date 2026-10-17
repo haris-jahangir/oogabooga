@@ -33,6 +33,7 @@ public class ClueViewer : MonoBehaviour
     [Tooltip("Let the player keep moving while the recording plays.")]
     [SerializeField] bool canMoveDuringRecording = true;
 
+    static GUIStyle style, hint;
     AudioSource audioSource;
     PlayerMovement player;
     bool showing;
@@ -116,7 +117,9 @@ public class ClueViewer : MonoBehaviour
         }
 
         Keyboard k = Keyboard.current;
-        if (HasPicture && ((k != null && k.eKey.wasPressedThisFrame) || MenuInput.DismissPressed()))
+        bool putDown = k != null && (k.eKey.wasPressedThisFrame || k.enterKey.wasPressedThisFrame
+                                     || k.numpadEnterKey.wasPressedThisFrame || k.spaceKey.wasPressedThisFrame);
+        if (HasPicture && (putDown || MenuInput.DismissPressed()))
             Close();
     }
 
@@ -125,7 +128,9 @@ public class ClueViewer : MonoBehaviour
         if (!showing)
             return;
 
-        var style = new GUIStyle(GUI.skin.label) { fontSize = 20, alignment = TextAnchor.MiddleCenter, wordWrap = true };
+        // Styles are made once: OnGUI runs several times a frame.
+        style ??= new GUIStyle(GUI.skin.label) { fontSize = 20, alignment = TextAnchor.MiddleCenter, wordWrap = true };
+        hint ??= new GUIStyle(style) { fontSize = 14 };
         bool playing = audioSource != null && audioSource.isPlaying;
 
         if (HasPicture)
@@ -138,8 +143,7 @@ public class ClueViewer : MonoBehaviour
                 DrawSprite(picture, imageArea);
             if (textHeight > 0f)
                 GUI.Label(new Rect(box.x + 20f, box.yMax - 50f - textHeight, box.width - 40f, textHeight), text, style);
-            var hint = new GUIStyle(style) { fontSize = 14 };
-            GUI.Label(new Rect(box.x, box.yMax - 40f, box.width, 30f), "Press any arrow key, Esc or click to put it down", hint);
+            GUI.Label(new Rect(box.x, box.yMax - 40f, box.width, 30f), "Press E, Enter or Space to put it down", hint);
         }
 
         if (playing && !string.IsNullOrEmpty(subtitle))

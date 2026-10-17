@@ -22,6 +22,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float fallGravityMultiplier = 2f;
     [Tooltip("Seconds after leaving a ledge during which a jump still counts.")]
     [SerializeField] float coyoteTime = 0.1f;
+    [Tooltip("A jump pressed this many seconds before landing still happens on landing.")]
+    [SerializeField] float jumpBuffer = 0.12f;
+    [Tooltip("Barely missing the top of a one-way ledge by this much (units) lifts you onto it.")]
+    [SerializeField] float ledgeAssist = 0.35f;
 
     [Header("Dash")]
     [Tooltip("Speed during a dash, in units per second.")]
@@ -38,6 +42,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] LayerMask groundLayers = ~0;
 
     Rigidbody2D rb;
+    Collider2D body;
+    readonly Collider2D[] ledgeHits = new Collider2D[8];
     InputAction moveAction;
     InputAction jumpAction;
     InputAction dashAction;
@@ -46,7 +52,9 @@ public class PlayerMovement : MonoBehaviour
 
     float moveInput;
     float lastGroundedTime = float.NegativeInfinity;
-    bool jumpPressed;
+    float jumpPressedTime = float.NegativeInfinity;
+    bool canMove = true;
+    int regainedFrame = -1;
 
     bool dashPressed;
     float facing = 1f;
@@ -78,11 +86,22 @@ public class PlayerMovement : MonoBehaviour
     public bool IsDashing => Time.time < dashEndTime;
 
     /// <summary>When false, input is ignored (e.g. while the player is scared).</summary>
-    public bool CanMove { get; set; } = true;
+    public bool CanMove
+    {
+        get => canMove;
+        set
+        {
+            // The key that closed a menu (Space, Enter) must not also jump or dash on that frame.
+            if (value && !canMove)
+                regainedFrame = Time.frameCount;
+            canMove = value;
+        }
+    }
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        body = GetComponent<Collider2D>();
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -117,10 +136,10 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        if (!CanMove)
+        if (!CanMove || Time.frameCount == regainedFrame)
         {
             moveInput = 0f;
-            jumpPressed = false;
+            jumpPressedTime = float.NegativeInfinity;
             dashPressed = false;
             return;
         }
@@ -129,7 +148,7 @@ public class PlayerMovement : MonoBehaviour
         // Like Input.GetKeyDown: one tap = one jump. Holding does nothing extra.
         // Latched here and consumed in FixedUpdate so a tap is never missed between physics steps.
         if (jumpAction.WasPressedThisFrame())
-            jumpPressed = true;
+            jumpPressedTime = Time.time;
         if (dashAction.WasPressedThisFrame())
             dashPressed = true;
 
@@ -175,12 +194,16 @@ public class PlayerMovement : MonoBehaviour
         float accel = IsGrounded ? groundAcceleration : airAcceleration;
         velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accel * Time.fixedDeltaTime);
 
-        // Jump on tap when on the ground (or just walked off a ledge). Always the same height.
+        if (!IsGrounded && velocity.y <= 1f)
+            AssistOntoLedge(ref velocity);
+
+        // Jump on tap when on the ground (or just walked off a ledge), or on landing if it was
+        // pressed a moment before. Always the same height.
         bool canJump = Time.time - lastGroundedTime <= coyoteTime;
-        bool jump = jumpPressed && canJump;
-        jumpPressed = false;
+        bool jump = Time.time - jumpPressedTime <= jumpBuffer && canJump;
         if (jump)
         {
+            jumpPressedTime = float.NegativeInfinity;
             float gravity = Mathf.Abs(Physics2D.gravity.y * baseGravityScale);
             velocity.y = Mathf.Sqrt(2f * gravity * jumpHeight);
             lastGroundedTime = float.NegativeInfinity;
@@ -191,5 +214,29 @@ public class PlayerMovement : MonoBehaviour
         rb.gravityScale = velocity.y < 0f ? baseGravityScale * fallGravityMultiplier : baseGravityScale;
 
         rb.linearVelocity = velocity;
+    }
+
+    // Near the top of a jump, feet just under the top of a one-way ledge you're passing through:
+    // step up onto it instead of dropping back down.
+    void AssistOntoLedge(ref Vector2 velocity)
+    {
+        if (body == null || ledgeAssist <= 0f)
+            return;
+        Bounds b = body.bounds;
+        var area = new Vector2(b.size.x * 0.6f, ledgeAssist);
+        int count = Physics2D.OverlapBox(new Vector2(b.center.x, b.min.y + ledgeAssist / 2f), area, 0f, ContactFilter2D.noFilter, ledgeHits);
+        for (int i = 0; i < count; i++)
+        {
+            Collider2D c = ledgeHits[i];
+            if (c == body || c.isTrigger || !c.usedByEffector || !c.TryGetComponent(out PlatformEffector2D e) || !e.useOneWay)
+                continue;
+            float lift = c.bounds.max.y - b.min.y;
+            if (lift > 0f && lift <= ledgeAssist)
+            {
+                rb.position += new Vector2(0f, lift + 0.01f);
+                velocity.y = 0f;
+                return;
+            }
+        }
     }
 }

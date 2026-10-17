@@ -184,13 +184,22 @@ public static class StoryBuilder
         SetAll<KeypadLock>(room1, "nextScene", p => p.stringValue = "Scene2");
         foreach (var (field, file) in new[] { ("keySound", "keypad key"), ("wrongSound", "keypad wrong"), ("unlockSound", "keypad unlock") })
             SetAll<KeypadLock>(room1, field, p => p.objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/sfx/{file}.wav"));
-        SetAll<PlayerMovement>(room1, "moveSpeed", p => p.floatValue = 7.5f); // calmer than level 2's 10: a room for searching
+        // Playtest tuning: slower, more forgiving movement; platforms you can jump up through.
+        SetAll<PlayerMovement>(room1, "moveSpeed", p => p.floatValue = 5f);
+        SetAll<PlayerMovement>(room1, "coyoteTime", p => p.floatValue = 0.15f);
+        MakeThinPlatformsOneWay(room1);
+        PlaceWallText(room1);
         EditorSceneManager.SaveScene(room1);
 
         // Level 2: the art, and the roof exit leads to the ending.
         var level2 = EditorSceneManager.OpenScene("Assets/Scenes/Scene2.unity");
         DressCharacters(level2);
         SetAll<RoofExit>(level2, "nextScene", p => p.stringValue = "Ending");
+        // Playtest tuning: slower movement, more time before and while the fire rises.
+        SetAll<PlayerMovement>(level2, "moveSpeed", p => p.floatValue = 6f);
+        SetAll<PlayerMovement>(level2, "coyoteTime", p => p.floatValue = 0.15f);
+        SetAll<Fire>(level2, "growSpeed", p => p.floatValue = 0.85f);
+        SetAll<Fire>(level2, "startDelay", p => p.floatValue = 5f);
         EditorSceneManager.SaveScene(level2);
 
         // The menu's fonts travel with the game.
@@ -208,6 +217,39 @@ public static class StoryBuilder
             .Select(path => new EditorBuildSettingsScene(path, true)).ToArray();
         Debug.Log("STORY wired: " + string.Join(" -> ", EditorBuildSettings.scenes.Select(s => System.IO.Path.GetFileNameWithoutExtension(s.path))));
     }
+
+    // Thin platforms (scaffolding, walkways) become one-way: jump up through them, land on top.
+    // Floors, walls and crates stay solid.
+    static void MakeThinPlatformsOneWay(UnityEngine.SceneManagement.Scene scene)
+    {
+        foreach (BoxCollider2D box in scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<BoxCollider2D>(true)))
+        {
+            Bounds b = box.bounds;
+            if (box.isTrigger || box.GetComponentInParent<PlayerMovement>() != null || b.size.y > 0.6f || b.size.x < 1.5f)
+                continue;
+            box.usedByEffector = true;
+            if (!box.TryGetComponent(out PlatformEffector2D effector))
+                effector = box.gameObject.AddComponent<PlatformEffector2D>();
+            effector.useOneWay = true;
+            effector.surfaceArc = 170f;
+            Debug.Log("STORY one-way platform: " + box.name);
+        }
+    }
+
+    static void PlaceWallText(UnityEngine.SceneManagement.Scene scene)
+    {
+        const string name = "Wall Text: Stay In The Light";
+        GameObject go = scene.GetRootGameObjects().FirstOrDefault(g => g.name == name) ?? new GameObject(name);
+        go.transform.position = WallTextPosition;
+        if (!go.TryGetComponent(out SpriteRenderer sr))
+            sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(Art + "WallText_StayInTheLight.png");
+        sr.sharedMaterial = AssetDatabase.LoadAssetAtPath<Material>(UnlitMaterial); // readable in the dark, like old paint
+        sr.color = new Color(1f, 1f, 1f, 0.9f);
+        sr.sortingOrder = -10; // painted on the back wall, behind everything
+    }
+
+    static readonly Vector3 WallTextPosition = new Vector3(-0.4f, 1.1f, 0f);
 
     static void SetAll<T>(UnityEngine.SceneManagement.Scene scene, string field, System.Action<SerializedProperty> set) where T : Component
     {

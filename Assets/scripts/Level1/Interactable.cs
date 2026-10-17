@@ -24,6 +24,7 @@ public class Interactable : MonoBehaviour
     /// <summary>True while a menu (like the lock dial) has taken over the controls.</summary>
     public static bool Blocked;
     static Interactable focus;
+    static GUIStyle style;
 
     // Domain reload is disabled in this project, so statics survive between Play sessions.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -106,7 +107,8 @@ public class Interactable : MonoBehaviour
             return;
         Vector3 s = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 0.8f);
         string bar = holdSeconds > 0f && held > 0f ? "\n" + new string('|', Mathf.CeilToInt(held / holdSeconds * 20f)) : "";
-        var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.LowerCenter, fontSize = 18 };
+        // Made once: OnGUI runs several times a frame.
+        style ??= new GUIStyle(GUI.skin.label) { alignment = TextAnchor.LowerCenter, fontSize = 18 };
         GUI.Label(new Rect(s.x - 150f, Screen.height - s.y - 60f, 300f, 60f), $"[E] {prompt}{bar}", style);
     }
 }

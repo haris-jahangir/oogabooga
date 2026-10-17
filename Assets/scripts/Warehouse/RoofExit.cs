@@ -15,6 +15,7 @@ public class RoofExit : MonoBehaviour
     [SerializeField] string message = "You escaped!";
     [SerializeField] AudioClip reachedSound;
 
+    static GUIStyle style;
     bool reached;
 
     void Reset() => GetComponent<Collider2D>().isTrigger = true;
@@ -51,7 +52,8 @@ public class RoofExit : MonoBehaviour
     {
         if (!reached)
             return;
-        var style = new GUIStyle(GUI.skin.label) { fontSize = 40, alignment = TextAnchor.MiddleCenter };
+        // Made once: OnGUI runs several times a frame.
+        style ??= new GUIStyle(GUI.skin.label) { fontSize = 40, alignment = TextAnchor.MiddleCenter };
         GUI.Label(new Rect(0f, Screen.height * 0.4f, Screen.width, 80f), message, style);
     }
 }

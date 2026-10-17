@@ -25,6 +25,7 @@ public class KeypadLock : MonoBehaviour
     [SerializeField] AudioClip wrongSound;
     [SerializeField] AudioClip unlockSound;
 
+    static GUIStyle style, big, hint;
     AudioSource audioSource;
     PlayerMovement player;
     string entered = "";
@@ -96,12 +97,6 @@ public class KeypadLock : MonoBehaviour
             Play(keySound);
             return;
         }
-        if (k.enterKey.wasPressedThisFrame || k.numpadEnterKey.wasPressedThisFrame)
-        {
-            TryCode();
-            return;
-        }
-
         for (int d = 0; d <= 9; d++)
         {
             // The number row runs 1..9 then 0 in the Key enum; the numpad runs 0..9.
@@ -111,6 +106,9 @@ public class KeypadLock : MonoBehaviour
             {
                 entered += d;
                 Play(keySound);
+                // Checked the moment the last digit goes in: no Enter needed.
+                if (entered.Length == code.Length)
+                    TryCode();
                 break;
             }
         }
@@ -166,20 +164,22 @@ public class KeypadLock : MonoBehaviour
 
     void OnGUI()
     {
-        var style = new GUIStyle(GUI.skin.label) { fontSize = 22, alignment = TextAnchor.MiddleCenter };
+        // Styles are made once: OnGUI runs several times a frame.
+        style ??= new GUIStyle(GUI.skin.label) { fontSize = 22, alignment = TextAnchor.MiddleCenter };
+        big ??= new GUIStyle(style) { fontSize = 48 };
+        hint ??= new GUIStyle(style) { fontSize = 16 };
         if (Time.time < messageUntil)
             GUI.Label(new Rect(0f, Screen.height - 90f, Screen.width, 40f), message, style);
         if (!open)
             return;
 
-        var box = new Rect(Screen.width / 2f - 170f, Screen.height / 2f - 90f, 340f, 180f);
+        // Low on the screen, so the room and the player stay in view.
+        var box = new Rect(Screen.width / 2f - 170f, Screen.height - 230f, 340f, 180f);
         GUI.Box(box, "");
-        var big = new GUIStyle(style) { fontSize = 48 };
         string shown = "";
         for (int i = 0; i < code.Length; i++)
             shown += (i < entered.Length ? entered[i].ToString() : "_") + (i < code.Length - 1 ? " " : "");
         GUI.Label(new Rect(box.x, box.y + 25f, box.width, 70f), shown, big);
-        var hint = new GUIStyle(style) { fontSize = 14 };
-        GUI.Label(new Rect(box.x, box.y + 120f, box.width, 40f), "Type the code   Enter try   Backspace delete   Arrows / Esc / click: leave", hint);
+        GUI.Label(new Rect(box.x, box.y + 120f, box.width, 40f), "Search the area to find the code", hint);
     }
 }
