@@ -1342,7 +1342,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KeypadLock
   code: 3816
-  nextScene: 
+  nextScene: Scene1
   loadDelay: 1
   keySound: {fileID: 0}
   wrongSound: {fileID: 0}
