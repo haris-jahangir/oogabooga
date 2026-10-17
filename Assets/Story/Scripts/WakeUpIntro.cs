@@ -4,16 +4,16 @@ using UnityEngine.UI;
 
 /// <summary>
 /// The opening of room 1: the player wakes up somewhere dark, lying on the floor. The eyelids
-/// flutter open, the view sways and clears, the player gets up, a line appears
-/// ("Main kahan hoon?"), then the player can move.
+/// flutter open, the view sways and clears, the player gets up, a line flickers in like a dying
+/// ember ("Where am I?"), then the player can move.
 /// Put it on any object in the scene. It draws its own screen overlay, so it needs no setup.
 /// </summary>
 public class WakeUpIntro : MonoBehaviour
 {
     [Tooltip("What the player thinks as they wake up.")]
-    public string line = "Main kahan hoon?";
-    [Tooltip("Translation under the line. Leave empty for none.")]
-    public string subtitle = "Where am I?";
+    public string line = "Where am I?";
+    [Tooltip("A smaller line under it. Leave empty for none.")]
+    public string subtitle = "";
     [Tooltip("Optional: breathing or a heartbeat while waking up.")]
     public AudioClip wakeSound;
     [Tooltip("Optional: the voice line, played when the line appears.")]
@@ -67,7 +67,12 @@ public class WakeUpIntro : MonoBehaviour
         yield return FadeCaption(0f, 1f, 0.6f);
         if (player != null)
             player.CanMove = true;
-        yield return new WaitForSeconds(2.2f);
+        // It gutters like the last of a fire while it's up.
+        for (float t = 0f; t < 2.2f; t += 0.06f)
+        {
+            SetAlpha(caption, Random.Range(0.55f, 1f));
+            yield return new WaitForSeconds(0.06f);
+        }
         yield return FadeCaption(1f, 0f, 0.8f);
         Destroy(overlay);
         if (cam != null)
@@ -178,7 +183,7 @@ public class WakeUpIntro : MonoBehaviour
         bottomLid = Panel("Bottom Eyelid", Color.black, Vector2.zero, new Vector2(1f, 0.5f));
 
         Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        caption = MakeText("Line", line, 54, font, new Vector2(0f, -120f));
+        caption = MakeText("Line", line, 48, font, new Vector2(0f, -120f));
         captionSub = MakeText("Subtitle", subtitle, 30, font, new Vector2(0f, -185f));
         SetAlpha(caption, 0f);
         SetAlpha(captionSub, 0f);
@@ -205,13 +210,12 @@ public class WakeUpIntro : MonoBehaviour
         var text = rt.gameObject.AddComponent<Text>();
         text.font = font;
         text.fontSize = size;
-        text.fontStyle = FontStyle.Italic;
         text.alignment = TextAnchor.MiddleCenter;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.color = new Color(0.92f, 0.9f, 0.85f);
+        text.color = new Color(0.8f, 0.3f, 0.2f); // ember, not white: it belongs to the dark
         text.text = value;
         var outline = rt.gameObject.AddComponent<Outline>();
-        outline.effectColor = new Color(0f, 0f, 0f, 0.8f);
+        outline.effectColor = new Color(0.15f, 0.02f, 0f, 0.9f);
         return text;
     }
 }

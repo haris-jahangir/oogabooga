@@ -417,6 +417,10 @@ public class EndingDirector : MonoBehaviour
         captionText = Label(root.transform, "Caption", font, 44, TextAnchor.MiddleCenter, new Vector2(0.1f, 0.4f), new Vector2(0.9f, 0.6f));
         captionText.fontStyle = FontStyle.Italic;
         captionText.color = new Color(1f, 1f, 1f, 0f);
+        // Dark edge so the words read on the bright hospital as well as on black.
+        var edge = captionText.gameObject.AddComponent<Outline>();
+        edge.effectColor = new Color(0.05f, 0.06f, 0.08f, 0.95f);
+        edge.effectDistance = new Vector2(2.5f, -2.5f);
 
         fade = Rect(root.transform, "Fade", Vector2.zero, Vector2.one).gameObject.AddComponent<Image>();
         fade.color = Color.black;

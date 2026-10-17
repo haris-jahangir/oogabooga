@@ -45,8 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc565930510acda0fa3972a808deebea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WakeUpIntro
-  line: Main kahan hoon?
-  subtitle: Where am I?
+  line: Where am I?
+  subtitle: 
   wakeSound: {fileID: 0}
   voiceLine: {fileID: 0}
   sway: 3
