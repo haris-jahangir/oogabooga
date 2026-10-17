@@ -1212,8 +1212,8 @@ GameObject:
   m_Component:
   - component: {fileID: 591363009}
   - component: {fileID: 591363008}
-  - component: {fileID: 591363007}
   - component: {fileID: 591363010}
+  - component: {fileID: 591363011}
   m_Layer: 0
   m_Name: digilock
   m_TagString: Untagged
@@ -1221,20 +1221,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &591363007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 591363006}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ccbbb9953ce0d4900a11ec26bad9e202, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CodeLock
-  code: 3186
-  door: {fileID: 591363006}
 --- !u!212 &591363008
 SpriteRenderer:
   serializedVersion: 2
@@ -1321,19 +1307,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf1697f545e9753388b30e7ecdb78cfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interactable
-  prompt: Use
+  prompt: Use keypad
   holdSeconds: 0
   range: 1.2
   requiresHidden: 0
-  singleUse: 1
+  singleUse: 0
   useSound: {fileID: 0}
   useVolume: 1
   onUsed:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 11500000, guid: 65361fd74a7b17b4db019f65522541ae, type: 3}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 591363011}
+        m_TargetAssemblyTypeName: KeypadLock, Assembly-CSharp
+        m_MethodName: Open
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1343,6 +1329,24 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &591363011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 591363006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65361fd74a7b17b4db019f65522541ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KeypadLock
+  code: 3816
+  nextScene: 
+  loadDelay: 1
+  keySound: {fileID: 0}
+  wrongSound: {fileID: 0}
+  unlockSound: {fileID: 0}
 --- !u!1 &624035785
 GameObject:
   m_ObjectHideFlags: 0
@@ -1423,10 +1427,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a215e2a272a516d4ab61176b2450b1c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClueViewer
-  picture: {fileID: 0}
-  text: the 2nd digit is 1
+  picture: {fileID: -8110053827906254799, guid: b2ea20d02e8687045861252fdb14a412, type: 3}
+  text: the 3rd digit is 1
   recording: {fileID: 0}
-  subtitle: the 2nd digit is 1
+  subtitle: the 3rd digit is 1
   canMoveDuringRecording: 1
 --- !u!212 &624035789
 SpriteRenderer:
