@@ -16,6 +16,9 @@ public class Interactable : MonoBehaviour
     [Tooltip("Only usable while the player stands in a shadow (e.g. glow paint).")]
     public bool requiresHidden;
     public bool singleUse = true;
+    [Tooltip("Optional sound played when the player uses it.")]
+    public AudioClip useSound;
+    [Range(0f, 1f)] public float useVolume = 1f;
     public UnityEvent onUsed = new();
 
     /// <summary>True while a menu (like the lock dial) has taken over the controls.</summary>
@@ -32,6 +35,7 @@ public class Interactable : MonoBehaviour
 
     Transform player;
     InputAction interact;
+    AudioSource audioSource;
     float held;
     bool used;
 
@@ -77,7 +81,21 @@ public class Interactable : MonoBehaviour
             used = true;
             focus = null;
         }
+        PlayUseSound();
         onUsed.Invoke();
+    }
+
+    void PlayUseSound()
+    {
+        if (useSound == null)
+            return;
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f; // 2D: same loudness wherever the camera is
+        }
+        audioSource.PlayOneShot(useSound, useVolume);
     }
 
     float Distance() => Vector2.Distance(player.position, transform.position);

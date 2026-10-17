@@ -148,6 +148,23 @@ public class MonsterManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Stops the monster for good (e.g. once the level is solved): no more warnings or visits.
+    /// </summary>
+    public void StopHunting()
+    {
+        if (caught)
+            return;
+        StopAllCoroutines();
+        SetLightLevel(1f);
+        audioSource.Stop();
+        if (monster != null)
+            monster.SetActive(false);
+        if (player != null)
+            player.SetScared(false);
+        enabled = false;
+    }
+
+    /// <summary>
     /// Ends the run and restarts the scene. Used by other hazards such as Fire.
     /// </summary>
     public void CatchPlayer()
