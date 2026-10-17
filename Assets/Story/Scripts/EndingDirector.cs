@@ -46,6 +46,10 @@ public class EndingDirector : MonoBehaviour
     public AudioClip shadowAppears;
     public AudioClip darkSting;
 
+    [Header("Framing")]
+    [Tooltip("The backdrop's size in units. The camera always shows all of it, whatever the window shape.")]
+    public Vector2 pictureSize = new Vector2(1920f / 108f, 10f);
+
     Image fade, box;
     Text speakerText, lineText, captionText, titleText, subTitleText, hintText;
     Text[] choiceTexts;
@@ -80,6 +84,14 @@ public class EndingDirector : MonoBehaviour
             yield return DarkEnding();
         else
             yield return LightEnding();
+    }
+
+    // Fit the whole picture on screen: narrower windows get black bars top and bottom instead of losing the sides.
+    void LateUpdate()
+    {
+        Camera cam = Camera.main;
+        if (cam != null && cam.orthographic)
+            cam.orthographicSize = Mathf.Max(pictureSize.y / 2f, pictureSize.x / 2f / cam.aspect);
     }
 
     IEnumerator DarkEnding()
