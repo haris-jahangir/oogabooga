@@ -45,7 +45,7 @@ Scenes in build order: `MainMenu`, `Scene1` (Level 1), `Scene2` (Level 2), `Stor
 **Team**
 - Haris Jahangir (KibroPixen): programming, levels, VFX, main menu
 - Shayan (S16): narrative and level design, story and cutscenes, character animation set-up, game icon
-- The team's artist: character art and animation frames, clue art
+- The team's artist(Fatimah Adeel): character art and animation frames, clue art
 
 Built with Unity 6, Claude Code and the Unity MCP.
 
