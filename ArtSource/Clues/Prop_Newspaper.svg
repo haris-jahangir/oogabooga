@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 150" width="220" height="150">
+  <ellipse cx="112" cy="145" rx="98" ry="5" fill="#000" opacity=".28"/>
+  <g transform="rotate(-4 112 80)" stroke-linejoin="round" stroke-linecap="round">
+    <!-- back page, peeking under the fold -->
+    <path d="M26 30 L198 24 L202 140 L30 144 Z" fill="#cfc2a0" stroke="#1f1a17" stroke-width="5"/>
+    <!-- front page -->
+    <path d="M20 22 L194 16 L198 134 L24 138 Z" fill="#ebe1c7" stroke="#1f1a17" stroke-width="5"/>
+    <!-- masthead -->
+    <rect x="34" y="28" width="148" height="10" rx="2" fill="#2b2622"/>
+    <line x1="32" y1="45" x2="184" y2="44" stroke="#2b2622" stroke-width="2"/>
+    <!-- big headline -->
+    <rect x="32" y="51" width="152" height="15" rx="2" fill="#2b2622"/>
+    <!-- photo of the pier 3 warehouse -->
+    <rect x="32" y="74" width="70" height="48" fill="#5a5653" stroke="#2b2622" stroke-width="3"/>
+    <path d="M38 118 L38 98 L67 86 L96 98 L96 118 Z" fill="#2a2826"/>
+    <rect x="61" y="104" width="12" height="14" fill="#151312"/>
+    <!-- columns of text -->
+    <g stroke="#2b2622" stroke-width="3.2" opacity=".85">
+      <line x1="110" y1="78" x2="184" y2="77"/><line x1="110" y1="86" x2="184" y2="85"/>
+      <line x1="110" y1="94" x2="176" y2="93"/><line x1="110" y1="102" x2="184" y2="101"/>
+      <line x1="110" y1="110" x2="150" y2="109"/>
+    </g>
+    <!-- the circled 3 -->
+    <circle cx="170" cy="117" r="10" fill="none" stroke="#c0392b" stroke-width="3.5"/>
+    <path d="M165.5 111.5 C170 108.5 175 111 171.5 116 C177 117.5 175 124 165.5 122" fill="none" stroke="#2b2622" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- centre fold -->
+    <line x1="107" y1="20" x2="111" y2="136" stroke="#1f1a17" stroke-width="2" opacity=".35"/>
+  </g>
+</svg>
