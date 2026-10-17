@@ -23,6 +23,12 @@ src = Image.open(HERE / "Player_Cutout.png").convert("RGBA")
 scale = BODY / src.height
 
 
+def hat_x(image):
+    """The hat's centre: lined up in every frame so the head doesn't jitter."""
+    a = np.asarray(image)[: image.height // 5, :, 3] > 0
+    return np.nonzero(a)[1].mean()
+
+
 def resize(im, w, h):
     return im.convert("RGBa").resize((max(1, round(w)), max(1, round(h))), Image.LANCZOS).convert("RGBA")
 
@@ -32,7 +38,7 @@ def pose(sx=1.0, sy=1.0, angle=0.0, lift=0.0, dx=0.0, image=src):
     w, h = image.width * scale * sx, image.height * scale * sy
     body = resize(image, w, h)
     canvas = Image.new("RGBA", CANVAS)
-    canvas.alpha_composite(body, (round(FEET[0] - body.width / 2 + dx), round(FEET[1] - body.height - lift)))
+    canvas.alpha_composite(body, (round(FEET[0] - hat_x(image) * scale * sx + dx), round(FEET[1] - body.height - lift)))
     if angle:
         canvas = canvas.rotate(angle, resample=Image.BICUBIC, center=FEET)
     return canvas
@@ -52,8 +58,18 @@ def save(frames, folder, name):
 
 # ---- player ----
 save([pose(1 - d, 1 + 2 * d) for d in (0, 0.006, 0.012, 0.006)], "Player", "Player_Idle")
-# A waddle: rock onto one foot, bob up, rock onto the other.
-save([pose(1.02, 0.98, -4), pose(0.98, 1.03, 0, 5), pose(1.02, 0.98, 4), pose(0.98, 1.03, 0, 5)], "Player", "Player_Walk")
+# The artist's hand-drawn walk (Walk/Walk_0..3, cut by cut_black.py). All four share one placement,
+# so the stride's own bob and sway stay as drawn: the lowest foot of the cycle stands on the ground.
+walk = [Image.open(HERE / f"Walk/Walk_{i}.png").convert("RGBA") for i in range(4)]
+ground = max(np.nonzero(np.asarray(w)[..., 3].any(1))[0][-1] for w in walk) + 1
+centre = np.mean([hat_x(w.crop((0, np.nonzero(np.asarray(w)[..., 3].any(1))[0][0], w.width, w.height))) for w in walk])
+walk_frames = []
+for w in walk:
+    big = resize(w, w.width * scale, w.height * scale)
+    canvas = Image.new("RGBA", CANVAS)
+    canvas.alpha_composite(big, (round(FEET[0] - centre * scale), round(FEET[1] - ground * scale)))
+    walk_frames.append(canvas)
+save(walk_frames, "Player", "Player_Walk")
 # Played once, holding the last frame: push off, stretch, float, fall.
 save([pose(1.1, 0.88), pose(0.9, 1.12), pose(0.97, 1.04), pose(1.0, 1.0, -3)], "Player", "Player_Jump")
 pale = tint(src, (170, 190, 235), 0.25)
