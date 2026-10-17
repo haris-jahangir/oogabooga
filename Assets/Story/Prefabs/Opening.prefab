@@ -50,6 +50,8 @@ MonoBehaviour:
   wakeSound: {fileID: 0}
   voiceLine: {fileID: 0}
   sway: 3
+  startLying: 1
+  lieDrop: 0.26
 --- !u!114 &38064549309765737
 MonoBehaviour:
   m_ObjectHideFlags: 0
