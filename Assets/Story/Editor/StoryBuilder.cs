@@ -92,6 +92,8 @@ public static class StoryBuilder
         director.darkSting = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/sfx/monster sound.mp3");
         director.fireLoop = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/sfx/fire sfx.mp3");
         director.music = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/music/horror musiic.mp3");
+        director.lightMusic = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/music/ending_light_piano.ogg");
+        director.darkMusic = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/music/ending_dark_piano.ogg");
 
         EditorSceneManager.SaveScene(scene, "Assets/Story/Scenes/Ending.unity");
         Debug.Log("STORY ending scene saved");

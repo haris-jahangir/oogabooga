@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// A small "HIDE!" flashing at the top of the screen while the shadow's warning plays
+/// A small "LIGHT!" flashing at the top of the screen while the shadow's warning plays
 /// (the lights flickering). Installs itself in every level with a MonsterManager; nothing to wire.
 /// </summary>
 public class HideWarning : MonoBehaviour
@@ -33,7 +33,7 @@ public class HideWarning : MonoBehaviour
         var scaler = gameObject.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
-        var rt = new GameObject("Hide", typeof(RectTransform)).GetComponent<RectTransform>();
+        var rt = new GameObject("Light", typeof(RectTransform)).GetComponent<RectTransform>();
         rt.SetParent(transform, false);
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 1f);
         rt.anchoredPosition = new Vector2(0f, -40f);
@@ -44,7 +44,7 @@ public class HideWarning : MonoBehaviour
         label.fontSize = 52;
         label.alignment = TextAnchor.MiddleCenter;
         label.color = new Color(1f, 0.82f, 0.45f);
-        label.text = "HIDE!";
+        label.text = "LIGHT!";   // get into the light: that's where the shadow can't reach
         rt.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.9f);
         label.enabled = false;
     }

@@ -55,6 +55,11 @@ public class EndingDirector : MonoBehaviour
     [Tooltip("Music under the conversation with the shadow.")]
     public AudioClip music;
     [Range(0f, 1f)] public float musicVolume = 0.5f;
+    [Tooltip("Soothing piano for the light ending (fades in at the white flash).")]
+    public AudioClip lightMusic;
+    [Tooltip("Dark piano for the dark ending (fades in as the shadow takes your hand).")]
+    public AudioClip darkMusic;
+    [Range(0f, 1f)] public float endingMusicVolume = 0.6f;
 
     [Header("Framing")]
     [Tooltip("The backdrop's size in units. The camera always shows all of it, whatever the window shape.")]
@@ -117,6 +122,7 @@ public class EndingDirector : MonoBehaviour
         StartCoroutine(FadeAudio(musicSource, 0f, 2f));
         StartCoroutine(FadeAudio(fireSource, 0f, 2f));
         Play(darkSting);
+        StartCoroutine(FadeAudio(Loop(darkMusic, 0f), endingMusicVolume, 4f));
         // Its hand closes on yours and the dark spreads up through you.
         StartCoroutine(Darken(player, new Color(0.05f, 0.04f, 0.08f), 1.2f));
         yield return FadeScreen(Color.black, 0f, 1f, 1.6f);
@@ -137,6 +143,7 @@ public class EndingDirector : MonoBehaviour
         yield return Walk(lampX, 3.2f);
         StartCoroutine(FadeAudio(fireSource, 0f, 1f));
         yield return FadeScreen(Color.white, 0f, 1f, 1.4f);
+        StartCoroutine(FadeAudio(Loop(lightMusic, 0f), endingMusicVolume, 3f));
         StartCoroutine(HeartMonitor());
         SetAlpha(docks, 0f); SetAlpha(player, 0f); SetAlpha(shadow, 0f);
         SetAlpha(hospital, 1f);

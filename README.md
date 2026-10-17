@@ -67,6 +67,7 @@ Built with Unity 6, Claude Code and the Unity MCP.
 - `sfx/` (bill, newspaper, switch, fire, eerie sting, monster, dying, heartbeat): **[source needed]**
 
 **Music**
+- `music/ending_light_piano.ogg`, `music/ending_dark_piano.ogg`: composed and synthesised by the team (`ArtSource/Story/make_piano.py`)
 - `music/menu.mp3`: **[source needed]**
 - `music/horror musiic.mp3`: **[source needed]**
 - `music/chao.mp3`: **[source needed]**

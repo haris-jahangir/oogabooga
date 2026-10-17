@@ -298,6 +298,9 @@ MonoBehaviour:
   fireLoop: {fileID: 8300000, guid: 71b6faf71fffc514ebcd4d2746f1947a, type: 3}
   music: {fileID: 8300000, guid: 03f8e85efad343246ad3a191ab0d2ae6, type: 3}
   musicVolume: 0.5
+  lightMusic: {fileID: 8300000, guid: 8ad9ba96f53b42d0b2fc22819ddc06ed, type: 3}
+  darkMusic: {fileID: 8300000, guid: cee9f05910504359923d32b52462601f, type: 3}
+  endingMusicVolume: 0.6
   pictureSize: {x: 17.777779, y: 10}
 --- !u!4 &919596701
 Transform:
