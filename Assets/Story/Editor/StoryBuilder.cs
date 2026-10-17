@@ -182,7 +182,7 @@ public static class StoryBuilder
             PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab), room1);
         DressCharacters(room1);
         SetAll<KeypadLock>(room1, "nextScene", p => p.stringValue = "Scene2");
-        SetAll<PlayerMovement>(room1, "moveSpeed", p => p.floatValue = 10f); // level 2's speed
+        SetAll<PlayerMovement>(room1, "moveSpeed", p => p.floatValue = 7.5f); // calmer than level 2's 10: a room for searching
         EditorSceneManager.SaveScene(room1);
 
         // Level 2: the art, and the roof exit leads to the ending.
