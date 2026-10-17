@@ -11,6 +11,15 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class ClueViewer : MonoBehaviour
 {
+    static int openCount;
+
+    /// <summary>True while any clue is open (a picture shown or a recording playing).</summary>
+    public static bool AnyOpen => openCount > 0;
+
+    // Domain reload is disabled in this project, so statics survive between Play sessions.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => openCount = 0;
+
     [Header("Picture (newspaper, bill)")]
     [Tooltip("Close-up image shown on screen. Put the digit in the art.")]
     [SerializeField] Sprite picture;
@@ -49,6 +58,7 @@ public class ClueViewer : MonoBehaviour
         if (showing)
             return;
         showing = true;
+        openCount++;
         openedFrame = Time.frameCount; // the E that opened it must not also close it
 
         if (recording != null)
@@ -64,6 +74,8 @@ public class ClueViewer : MonoBehaviour
 
     void Close()
     {
+        if (showing)
+            openCount--;
         showing = false;
         if (audioSource != null)
             audioSource.Stop();

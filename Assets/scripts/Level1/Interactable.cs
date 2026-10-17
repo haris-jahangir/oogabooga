@@ -50,7 +50,7 @@ public class Interactable : MonoBehaviour
 
     void Update()
     {
-        bool usable = player != null && !used && !Blocked
+        bool usable = player != null && !used && !Blocked && !MonsterManager.IsHunting
             && (!requiresHidden || HidingSpot.IsPlayerHidden)
             && Distance() <= range;
         // The closest usable thing gets the prompt, so neighbouring bags don't fight.

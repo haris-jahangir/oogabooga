@@ -32,6 +32,9 @@ public class MonsterManager : MonoBehaviour
     [Min(0f)] [SerializeField] float warningDuration = 1.5f;
     [Tooltip("How long the monster stays. The player must stay hidden the whole time.")]
     [SerializeField] float monsterStayDuration = 6f;
+    [Tooltip("After the player finishes reading a clue or using a lock, the monster waits at least this long.")]
+    [SerializeField] float graceAfterInteracting = 2f;
+
     [Header("Spawn Position")]
     [Tooltip("Closest the monster appears to the player, sideways, in units.")]
     [SerializeField] float minSpawnDistance = 1f;
@@ -62,6 +65,16 @@ public class MonsterManager : MonoBehaviour
     float[] baseIntensities;
     bool flickering; // baseIntensities only hold real values during a warning
     bool caught;
+
+    /// <summary>True from the warning until the monster leaves. Objects can't be used meanwhile.</summary>
+    public static bool IsHunting { get; private set; }
+
+    /// <summary>True while the player is reading a clue, on the phone or at a lock.</summary>
+    static bool PlayerBusy => Interactable.Blocked || ClueViewer.AnyOpen;
+
+    // Domain reload is disabled in this project, so statics survive between Play sessions.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => IsHunting = false;
     Fire[] fires;
 
     void Awake()
@@ -89,11 +102,33 @@ public class MonsterManager : MonoBehaviour
     {
         while (!caught)
         {
-            yield return new WaitForSeconds(Random.Range(minDelay, maxDelay));
+            yield return Countdown(Random.Range(minDelay, maxDelay));
+            IsHunting = true;
             yield return Warning();
             yield return MonsterVisit();
+            IsHunting = false;
         }
     }
+
+    // Counts down only while the player isn't busy with an object, so the monster
+    // never comes mid-interaction, and leaves a short grace period after one.
+    IEnumerator Countdown(float seconds)
+    {
+        float remaining = seconds;
+        while (remaining > 0f)
+        {
+            if (PlayerBusy)
+            {
+                while (PlayerBusy)
+                    yield return null;
+                remaining = Mathf.Max(remaining, graceAfterInteracting);
+            }
+            remaining -= Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    void OnDisable() => IsHunting = false;
 
     IEnumerator Warning()
     {
