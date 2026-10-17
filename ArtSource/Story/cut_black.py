@@ -1,4 +1,4 @@
-"""Cuts a drawing off a pure black background and adds the white sticker outline.
+"""Cuts a drawing off a pure black (or transparent) background and adds the white sticker outline.
 
     python -I ArtSource/Story/cut_black.py in.png out.png
 """
@@ -6,9 +6,10 @@ import sys
 from collections import deque
 import numpy as np
 from PIL import Image, ImageFilter
-a = np.asarray(Image.open(sys.argv[1]).convert('RGB')).astype(int)
+src = np.asarray(Image.open(sys.argv[1]).convert('RGBA')).astype(int)
+a = src[..., :3]
 H, W, _ = a.shape
-bgc = a.max(axis=2) <= 6
+bgc = (a.max(axis=2) <= 6) | (src[..., 3] < 128)
 seen = np.zeros((H, W), bool)
 q = deque()
 for y in range(H):

@@ -71,8 +71,18 @@ for w in walk:
     canvas.alpha_composite(big, (round(FEET[0] - centre * scale), round(FEET[1] - ground * scale)))
     walk_frames.append(canvas)
 save(walk_frames, "Player", "Player_Walk")
-# Played once, holding the last frame: push off, stretch, float, fall.
-save([pose(1.1, 0.88), pose(0.9, 1.12), pose(0.97, 1.04), pose(1.0, 1.0, -3)], "Player", "Player_Jump")
+# The artist's jump (Jump/Jump_0..3): crouch, launch, peak, reaching down to land. Played once,
+# holding the last frame while falling. The physics already moves the body up and down, so each
+# frame keeps the head where the standing pose has it and only the body and legs change.
+jump_frames = []
+for i in range(4):
+    j = Image.open(HERE / f"Jump/Jump_{i}.png").convert("RGBA")
+    j = j.crop(j.getbbox())
+    big = resize(j, j.width * scale, j.height * scale)
+    canvas = Image.new("RGBA", CANVAS)
+    canvas.alpha_composite(big, (round(FEET[0] - hat_x(j) * scale), FEET[1] - BODY))
+    jump_frames.append(canvas)
+save(jump_frames, "Player", "Player_Jump")
 pale = tint(src, (170, 190, 235), 0.25)
 save([pose(1.04, 0.94, 0, 0, d, pale) for d in (-4, 4, -3, 3)], "Player", "Player_Scare")
 

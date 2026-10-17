@@ -414,7 +414,8 @@ public class EndingDirector : MonoBehaviour
             t.gameObject.SetActive(false);
         box.gameObject.SetActive(false);
 
-        captionText = Label(root.transform, "Caption", font, 44, TextAnchor.MiddleCenter, new Vector2(0.1f, 0.4f), new Vector2(0.9f, 0.6f));
+        // Low on the screen, like subtitles, so it never sits on a face.
+        captionText = Label(root.transform, "Caption", font, 44, TextAnchor.MiddleCenter, new Vector2(0.1f, 0.05f), new Vector2(0.9f, 0.2f));
         captionText.fontStyle = FontStyle.Italic;
         captionText.color = new Color(1f, 1f, 1f, 0f);
         // Dark edge so the words read on the bright hospital as well as on black.
