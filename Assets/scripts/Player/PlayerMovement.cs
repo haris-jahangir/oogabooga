@@ -86,6 +86,9 @@ public class PlayerMovement : MonoBehaviour
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        // No friction: pushing into a wall mid-jump would otherwise pin the player to its side.
+        // Stopping on the ground comes from groundAcceleration, not friction.
+        rb.sharedMaterial = new PhysicsMaterial2D("Player (no friction)") { friction = 0f, bounciness = 0f };
         baseGravityScale = rb.gravityScale;
 
         // Only contacts whose normal points upwards (i.e. surfaces below us) count as ground.
