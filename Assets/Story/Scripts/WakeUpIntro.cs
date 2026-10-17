@@ -1,10 +1,13 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
-/// The opening of room 1: the player wakes up somewhere dark. The eyelids flutter open, the haze
-/// clears, and "Where am I?" fades in and out, worn and quiet. Then the player can move.
+/// The opening of room 1: first a panel with how to survive (press E), then the player wakes up
+/// somewhere dark. The eyelids flutter open, the haze clears, and "Where am I?" fades in and out,
+/// worn and quiet. Then the player can move, but an invisible wall keeps them near the switch
+/// until it's used. After TRY AGAIN on the Game Over screen the opening is skipped.
 /// Put it on any object in the scene. It draws its own screen overlay, so it needs no setup.
 /// </summary>
 public class WakeUpIntro : MonoBehaviour
@@ -19,6 +22,16 @@ public class WakeUpIntro : MonoBehaviour
     public AudioClip wakeSound;
     [Tooltip("Optional: the voice line, played when the line appears.")]
     public AudioClip voiceLine;
+    [Tooltip("The panel shown before waking up. Empty = no panel.")]
+    [TextArea(4, 10)]
+    public string howToSurvive =
+        "You wake up inside a burning warehouse.\n\n" +
+        "When the lights flicker, something is coming.\n" +
+        "Get into the light: the shadow can't reach you there.\n\n" +
+        "Find the code. Outrun the fire. Escape.";
+    public string controls = "A / D  move      SPACE  jump      SHIFT  dash      E  use";
+    [Tooltip("Until the switch is used, an invisible wall this far to the player's right keeps them near it. 0 = none.")]
+    public float holdBackRight = 1f;
 
     PlayerMovement player;
     Transform cam;
@@ -30,12 +43,22 @@ public class WakeUpIntro : MonoBehaviour
     IEnumerator Start()
     {
         player = FindFirstObjectByType<PlayerMovement>();
+        HoldBack();
+        if (GameOverScreen.Retrying)
+        {
+            // Straight back in after a death: no panel, no waking up again.
+            GameOverScreen.Retrying = false;
+            enabled = false;
+            yield break;
+        }
         if (player != null)
             player.CanMove = false;
         if (Camera.main != null)
             cam = Camera.main.transform;
         BuildOverlay();
         SetLids(0f);
+        if (!string.IsNullOrEmpty(howToSurvive))
+            yield return HowToSurvive();
         Play(wakeSound);
 
         // Black, then the eyes try to open, close again, and open for real.
@@ -57,6 +80,66 @@ public class WakeUpIntro : MonoBehaviour
         yield return FadeCaption(1f, 0f, 1.4f);
         Destroy(overlay);
         enabled = false;
+    }
+
+    // An invisible wall to the player's right until the switch is used, so they find it first.
+    void HoldBack()
+    {
+        LevelStarter starter = FindFirstObjectByType<LevelStarter>();
+        if (holdBackRight <= 0f || player == null || starter == null || starter.HasStarted)
+            return;
+        var wall = new GameObject("Hold Back Wall (until the switch)");
+        wall.transform.position = player.transform.position + Vector3.right * holdBackRight;
+        wall.AddComponent<BoxCollider2D>().size = new Vector2(0.2f, 30f);
+        starter.Started += () => Destroy(wall);
+    }
+
+    // The game in four lines, on the black before the eyes open. Any of E / Enter / Space / click goes on.
+    IEnumerator HowToSurvive()
+    {
+        Font words = font != null ? font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        Font title = Resources.Load<Font>("Fonts/Creepster-Regular");
+        var group = new GameObject("How To Survive", typeof(RectTransform)).AddComponent<CanvasGroup>();
+        var rt = (RectTransform)group.transform;
+        rt.SetParent(overlay.transform, false);
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        Text head = MakeText("Title", "HOW TO SURVIVE", 96, title != null ? title : words, new Vector2(0f, 330f));
+        head.color = new Color(0.6f, 0.06f, 0.04f);
+        Text body = MakeText("Rules", howToSurvive, 40, words, new Vector2(0f, 60f));
+        body.rectTransform.sizeDelta = new Vector2(1500f, 420f);
+        body.lineSpacing = 1.15f;
+        Text keys = MakeText("Controls", controls, 30, words, new Vector2(0f, -230f));
+        keys.color = new Color(0.6f, 0.58f, 0.54f);
+        Text press = MakeText("Press", "Press E to begin", 34, words, new Vector2(0f, -360f));
+        foreach (Text t in new[] { head, body, keys, press })
+            t.transform.SetParent(rt, true);
+
+        for (float t = 0f; t < 1f; t += Time.deltaTime / 0.8f)
+        {
+            group.alpha = t;
+            yield return null;
+        }
+        group.alpha = 1f;
+        while (!Continue())
+        {
+            press.color = new Color(0.86f, 0.84f, 0.79f, 0.45f + 0.55f * Mathf.Abs(Mathf.Sin(Time.time * 2f)));
+            yield return null;
+        }
+        for (float t = 1f; t > 0f; t -= Time.deltaTime / 0.6f)
+        {
+            group.alpha = t;
+            yield return null;
+        }
+        Destroy(group.gameObject);
+    }
+
+    static bool Continue()
+    {
+        Keyboard k = Keyboard.current;
+        return k != null && (k.eKey.wasPressedThisFrame || k.enterKey.wasPressedThisFrame || k.spaceKey.wasPressedThisFrame)
+            || Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
     }
 
     IEnumerator MoveLids(float from, float to, float seconds)

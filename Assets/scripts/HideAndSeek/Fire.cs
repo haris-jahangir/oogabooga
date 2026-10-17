@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// A wall of fire that grows over time. By default its left edge stays put and it spreads
@@ -184,6 +183,6 @@ public class Fire : MonoBehaviour
         if (monsterManager != null)
             monsterManager.CatchPlayer();
         else
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            GameOverScreen.Show();
     }
 }

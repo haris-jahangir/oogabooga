@@ -15,9 +15,9 @@ public static class StoryBuilder
     const string OpeningPrefab = "Assets/Story/Prefabs/Opening.prefab";
     // The player's drawing is 1.4 units tall (Player frames at 137 PPU), the shadow 1.5 times that.
     const float PlayerHeight = 1.4f, ShadowHeight = 2.1f;
-    const string StoryFont = "Assets/Story/Fonts/SpecialElite-Regular.ttf";
+    const string StoryFont = "Assets/Story/Resources/Fonts/SpecialElite-Regular.ttf";
     // Free stand-ins for Chiller and Stencil, which only Windows has: the menu looks the same everywhere.
-    const string TitleFont = "Assets/Story/Fonts/Creepster-Regular.ttf", MenuFont = "Assets/Story/Fonts/StardosStencil-Bold.ttf";
+    const string TitleFont = "Assets/Story/Resources/Fonts/Creepster-Regular.ttf", MenuFont = "Assets/Story/Resources/Fonts/StardosStencil-Bold.ttf";
 
     /// <summary>Frames 0..3 of one animation, e.g. Frames("Player/Player_Walk").</summary>
     static Sprite[] Frames(string name) =>
@@ -182,6 +182,8 @@ public static class StoryBuilder
             PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab), room1);
         DressCharacters(room1);
         SetAll<KeypadLock>(room1, "nextScene", p => p.stringValue = "Scene2");
+        foreach (var (field, file) in new[] { ("keySound", "keypad key"), ("wrongSound", "keypad wrong"), ("unlockSound", "keypad unlock") })
+            SetAll<KeypadLock>(room1, field, p => p.objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>($"Assets/sfx/{file}.wav"));
         SetAll<PlayerMovement>(room1, "moveSpeed", p => p.floatValue = 7.5f); // calmer than level 2's 10: a room for searching
         EditorSceneManager.SaveScene(room1);
 

@@ -2573,9 +2573,9 @@ MonoBehaviour:
   code: 3816
   nextScene: Scene2
   loadDelay: 1
-  keySound: {fileID: 0}
-  wrongSound: {fileID: 0}
-  unlockSound: {fileID: 0}
+  keySound: {fileID: 8300000, guid: 7fe0c7d13d5d4bab9c9a9899c6c73ddc, type: 3}
+  wrongSound: {fileID: 8300000, guid: 2341d9c78b7e4cc7988fada9bedc2293, type: 3}
+  unlockSound: {fileID: 8300000, guid: 4290a4a2c0fa4e2fa1de5d4ba5fae5b9, type: 3}
 --- !u!1 &617969970
 GameObject:
   m_ObjectHideFlags: 0

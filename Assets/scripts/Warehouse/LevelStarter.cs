@@ -18,11 +18,16 @@ public class LevelStarter : MonoBehaviour
     [SerializeField] float fadeDuration = 1.5f;
     [Tooltip("Optional sound when the switch is flipped.")]
     [SerializeField] AudioClip switchSound;
+    [Tooltip("Seconds between the switch and the fire catching, so the switch's own sound is heard first.")]
+    [SerializeField] float fireDelay = 1f;
     [Tooltip("Begin on its own a moment after the scene loads (for levels without a switch).")]
     [SerializeField] bool startAutomatically;
     [SerializeField] float autoStartDelay = 2f;
 
     bool started;
+
+    /// <summary>Seconds after the switch before the fire starts (its sound waits too).</summary>
+    public float FireDelay => fireDelay;
 
     /// <summary>True once the switch has been used.</summary>
     public bool HasStarted => started;
@@ -64,10 +69,19 @@ public class LevelStarter : MonoBehaviour
         if (switchSound != null && Camera.main != null)
             AudioSource.PlayClipAtPoint(switchSound, Camera.main.transform.position);
         foreach (Behaviour b in startOnSwitch)
-            if (b != null)
+            if (b != null && !(b is Fire))
                 b.enabled = true;
+        StartCoroutine(LightFires());
         StartCoroutine(FadeFog());
         Started?.Invoke();
+    }
+
+    IEnumerator LightFires()
+    {
+        yield return new WaitForSeconds(fireDelay);
+        foreach (Behaviour b in startOnSwitch)
+            if (b is Fire)
+                b.enabled = true;
     }
 
     IEnumerator FadeFog()

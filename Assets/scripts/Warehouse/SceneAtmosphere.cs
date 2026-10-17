@@ -77,6 +77,7 @@ public class SceneAtmosphere : MonoBehaviour
     Fire fire;
     Transform player;
     AudioSource fireSource, musicSource;
+    float fireDelay; // the fire catches this long after the switch (LevelStarter.FireDelay)
     bool lit;
     float soundLevel; // 0..1 fade-in
     float flickerSeed;
@@ -112,6 +113,7 @@ public class SceneAtmosphere : MonoBehaviour
         }
 
         SetGlobal(darkIntensity);
+        fireDelay = starter.FireDelay;
         starter.Started += OnSwitch;
         GlowSwitches(starter);
         if (player != null && playerGlow > 0f)
@@ -125,16 +127,22 @@ public class SceneAtmosphere : MonoBehaviour
         lit = true;
         StartCoroutine(LightUp());
 
-        if (fire != null && fireGlow > 0f)
-            fireLight = MakePointLight(transform, "Fire Glow", fireGlowColor, fireGlow, fireGlowRadius, fireCastsShadows);
-        if ((fireCastsShadows && fireLight != null) || (lampSettings.castShadows && lamps.Length > 0))
+        if ((fireCastsShadows && fire != null && fireGlow > 0f) || (lampSettings.castShadows && lamps.Length > 0))
             AddShadowCasters();
         foreach (Lamp lamp in lamps)
             lamp.TurnOn(Random.Range(0f, lightUpDuration));
 
-        fireSource = MakeLoop(fireLoop);
         musicSource = MakeLoop(music);
+        Invoke(nameof(CatchFire), fireDelay);
         flickerSeed = Random.value * 100f;
+    }
+
+    // The fire's glow and crackle start when the fire itself does.
+    void CatchFire()
+    {
+        if (fire != null && fireGlow > 0f)
+            fireLight = MakePointLight(transform, "Fire Glow", fireGlowColor, fireGlow, fireGlowRadius, fireCastsShadows);
+        fireSource = MakeLoop(fireLoop);
     }
 
     IEnumerator LightUp()

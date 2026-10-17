@@ -1,7 +1,6 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
 /// <summary>
@@ -220,7 +219,8 @@ public class MonsterManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Ends the run and restarts the scene. Used by other hazards such as Fire.
+    /// Ends the run: the death sound, then the Game Over screen (Try Again / Main Menu).
+    /// Used by other hazards such as Fire.
     /// </summary>
     public void CatchPlayer()
     {
@@ -243,8 +243,9 @@ public class MonsterManager : MonoBehaviour
         if (player != null)
             player.SetScared(true, freezeMovement: true);
 
-        yield return new WaitForSeconds(restartDelay);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        // A second more than before, so the death sound is heard before the screen comes up.
+        yield return new WaitForSeconds(restartDelay + 1f);
+        GameOverScreen.Show();
     }
 
     /// <summary>
