@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 /// of the keypad code, drawn into the picture or spoken in the recording.
 ///
 /// Wire it: on the object's Interactable, add Show() to On Used (untick Single Use so it can be re-read).
-/// E or Esc puts it away. When the monster's warning starts, it closes so the player can hide.
+/// E, Esc, an arrow/WASD key or a mouse click puts it away. When the monster's warning starts, it closes so the player can hide.
 /// </summary>
 public class ClueViewer : MonoBehaviour
 {
@@ -116,7 +116,7 @@ public class ClueViewer : MonoBehaviour
         }
 
         Keyboard k = Keyboard.current;
-        if (HasPicture && k != null && (k.eKey.wasPressedThisFrame || k.escapeKey.wasPressedThisFrame))
+        if (HasPicture && ((k != null && k.eKey.wasPressedThisFrame) || MenuInput.DismissPressed()))
             Close();
     }
 
@@ -139,7 +139,7 @@ public class ClueViewer : MonoBehaviour
             if (textHeight > 0f)
                 GUI.Label(new Rect(box.x + 20f, box.yMax - 50f - textHeight, box.width - 40f, textHeight), text, style);
             var hint = new GUIStyle(style) { fontSize = 14 };
-            GUI.Label(new Rect(box.x, box.yMax - 40f, box.width, 30f), "E / Esc  put it down", hint);
+            GUI.Label(new Rect(box.x, box.yMax - 40f, box.width, 30f), "Press any arrow key, Esc or click to put it down", hint);
         }
 
         if (playing && !string.IsNullOrEmpty(subtitle))

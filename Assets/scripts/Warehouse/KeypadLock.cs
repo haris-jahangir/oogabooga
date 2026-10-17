@@ -4,7 +4,8 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// The digital lock on the warehouse floor. Open() shows a keypad: type the 4 digits
-/// (number row or numpad), Backspace deletes, Enter tries the code, Esc steps away.
+/// (number row or numpad), Backspace deletes, Enter tries the code. Esc, an arrow/WASD key
+/// or a mouse click steps away.
 /// The right code loads the next scene.
 ///
 /// Wire it: on the lock's Interactable, add Open() to On Used (untick Single Use).
@@ -84,7 +85,7 @@ public class KeypadLock : MonoBehaviour
         if (k == null)
             return;
 
-        if (k.escapeKey.wasPressedThisFrame)
+        if (MenuInput.DismissPressed())
         {
             Close();
             return;
@@ -179,6 +180,6 @@ public class KeypadLock : MonoBehaviour
             shown += (i < entered.Length ? entered[i].ToString() : "_") + (i < code.Length - 1 ? " " : "");
         GUI.Label(new Rect(box.x, box.y + 25f, box.width, 70f), shown, big);
         var hint = new GUIStyle(style) { fontSize = 14 };
-        GUI.Label(new Rect(box.x, box.y + 120f, box.width, 40f), "Type the code   Enter try   Backspace delete   Esc step away", hint);
+        GUI.Label(new Rect(box.x, box.y + 120f, box.width, 40f), "Type the code   Enter try   Backspace delete   Arrows / Esc / click: leave", hint);
     }
 }
