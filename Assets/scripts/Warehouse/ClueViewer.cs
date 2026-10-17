@@ -18,7 +18,7 @@ public class ClueViewer : MonoBehaviour
 
     // Domain reload is disabled in this project, so statics survive between Play sessions.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() => openCount = 0;
+    static void ResetStatics() { openCount = 0; Opened = null; }
 
     [Header("Picture (newspaper, bill)")]
     [Tooltip("Close-up image shown on screen. Put the digit in the art.")]
@@ -42,6 +42,12 @@ public class ClueViewer : MonoBehaviour
 
     bool HasPicture => picture != null || !string.IsNullOrEmpty(text);
 
+    /// <summary>Raised when any clue is opened (the code tracker listens).</summary>
+    public static event System.Action<ClueViewer> Opened;
+
+    /// <summary>The clue's picture (may be null for a phone recording).</summary>
+    public Sprite Picture => picture;
+
     void Start()
     {
         player = FindFirstObjectByType<PlayerMovement>();
@@ -60,6 +66,7 @@ public class ClueViewer : MonoBehaviour
             return;
         showing = true;
         openCount++;
+        Opened?.Invoke(this);
         openedFrame = Time.frameCount; // the E that opened it must not also close it
 
         if (recording != null)

@@ -26,6 +26,9 @@ public class KeypadLock : MonoBehaviour
     [SerializeField] AudioClip unlockSound;
 
     static GUIStyle style, big, hint;
+
+    /// <summary>The code that opens the lock.</summary>
+    public string Code => code;
     AudioSource audioSource;
     PlayerMovement player;
     string entered = "";
