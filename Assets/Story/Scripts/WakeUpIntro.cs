@@ -3,8 +3,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// The opening of room 1: the player wakes up somewhere dark. The eyelids flutter open,
-/// the view sways and clears, a line appears ("Main kahan hoon?"), then the player can move.
+/// The opening of room 1: the player wakes up somewhere dark, lying on the floor. The eyelids
+/// flutter open, the view sways and clears, the player gets up, a line appears
+/// ("Main kahan hoon?"), then the player can move.
 /// Put it on any object in the scene. It draws its own screen overlay, so it needs no setup.
 /// </summary>
 public class WakeUpIntro : MonoBehaviour
@@ -19,8 +20,13 @@ public class WakeUpIntro : MonoBehaviour
     public AudioClip voiceLine;
     [Tooltip("How far the view tilts while groggy, in degrees.")]
     public float sway = 3f;
+    [Tooltip("Start lying on the floor and get up once the eyes are open.")]
+    public bool startLying = true;
+    [Tooltip("How far the player sinks when lying down, so the body rests on the floor (units).")]
+    public float lieDrop = 0.26f;
 
     PlayerMovement player;
+    Rigidbody2D body;
     Transform cam;
     GameObject overlay;
     RectTransform topLid, bottomLid;
@@ -32,7 +38,11 @@ public class WakeUpIntro : MonoBehaviour
     {
         player = FindFirstObjectByType<PlayerMovement>();
         if (player != null)
+        {
             player.CanMove = false;
+            if (startLying)
+                LieDown();
+        }
         if (Camera.main != null)
             cam = Camera.main.transform;
         BuildOverlay();
@@ -49,8 +59,10 @@ public class WakeUpIntro : MonoBehaviour
         yield return new WaitForSeconds(0.25f);
         yield return MoveLids(0.55f, 1f, 1f);
 
-        // The haze clears and the line appears; the player can get up.
+        // The haze clears, the player gets up, and the line appears.
         StartCoroutine(Fade(haze, haze.color.a, 0f, 1.5f));
+        if (body != null)
+            yield return GetUp();
         Play(voiceLine);
         yield return FadeCaption(0f, 1f, 0.6f);
         if (player != null)
@@ -70,6 +82,32 @@ public class WakeUpIntro : MonoBehaviour
         // A slow, groggy tilt that settles as the player comes round.
         swayLeft = Mathf.MoveTowards(swayLeft, 0f, Time.deltaTime / 4f);
         cam.rotation = Quaternion.Euler(0f, 0f, Mathf.Sin(Time.time * 1.3f) * sway * swayLeft);
+    }
+
+    void LieDown()
+    {
+        // Physics off while lying, or the body would be pushed back out of the floor.
+        if (!player.TryGetComponent(out body))
+            return;
+        body.simulated = false;
+        player.transform.SetPositionAndRotation(player.transform.position + Vector3.down * lieDrop, Quaternion.Euler(0f, 0f, 90f));
+    }
+
+    IEnumerator GetUp()
+    {
+        Transform t = player.transform;
+        Vector3 lying = t.position, standing = lying + Vector3.up * lieDrop;
+        const float seconds = 0.9f;
+        for (float k = 0f; k < 1f; k += Time.deltaTime / seconds)
+        {
+            // Pushes up slowly, then swings upright, a little unsteady.
+            float e = 1f - Mathf.Pow(1f - k, 3f);
+            float wobble = Mathf.Sin(k * Mathf.PI * 3f) * (1f - k) * 6f;
+            t.SetPositionAndRotation(Vector3.Lerp(lying, standing, Mathf.Sqrt(k)), Quaternion.Euler(0f, 0f, 90f * (1f - e) + wobble));
+            yield return null;
+        }
+        t.SetPositionAndRotation(standing, Quaternion.identity);
+        body.simulated = true;
     }
 
     IEnumerator MoveLids(float from, float to, float seconds)

@@ -21,6 +21,8 @@ public class EndingDirector : MonoBehaviour
     public SpriteRenderer shadow;
     [Tooltip("x positions on the dock: warehouse door, where the player stops, the shadow, the lamp.")]
     public float doorX = -3.75f, stopX = -1.6f, shadowX = 2.05f, lampX = 7.2f;
+    [Tooltip("The player's frames (Player_Idle_0..3, Player_Walk_0..3). The player needs a Flipbook.")]
+    public Sprite[] playerIdle, playerWalk;
 
     [Header("Words")]
     public string speaker = "???";
@@ -59,10 +61,13 @@ public class EndingDirector : MonoBehaviour
     Text speakerText, lineText, captionText, titleText, subTitleText, hintText;
     Text[] choiceTexts;
     AudioSource sfx, fireSource, musicSource;
+    Flipbook playerFrames;
 
     IEnumerator Start()
     {
         sfx = gameObject.AddComponent<AudioSource>();
+        player.TryGetComponent(out playerFrames);
+        Animate(playerIdle);
         fireSource = Loop(fireLoop, 0.9f);
         musicSource = Loop(music, 0f);
         BuildUI();
@@ -108,6 +113,8 @@ public class EndingDirector : MonoBehaviour
         StartCoroutine(FadeAudio(musicSource, 0f, 2f));
         StartCoroutine(FadeAudio(fireSource, 0f, 2f));
         Play(darkSting);
+        // Its hand closes on yours and the dark spreads up through you.
+        StartCoroutine(Darken(player, new Color(0.05f, 0.04f, 0.08f), 1.2f));
         yield return FadeScreen(Color.black, 0f, 1f, 1.6f);
         yield return Caption(darkCaption1, 2.6f);
         SetAlpha(docks, 0f); SetAlpha(player, 0f); SetAlpha(shadow, 0f);
@@ -271,13 +278,32 @@ public class EndingDirector : MonoBehaviour
         Transform t = player.transform;
         float fromX = t.position.x, baseY = t.position.y;
         player.flipX = toX < fromX;
+        Animate(playerWalk);
         for (float k = 0f; k < 1f; k += Time.deltaTime / seconds)
         {
-            float x = Mathf.Lerp(fromX, toX, k);
-            t.position = new Vector3(x, baseY + Mathf.Abs(Mathf.Sin(k * seconds * 9f)) * 0.05f, 0f);
+            t.position = new Vector3(Mathf.Lerp(fromX, toX, k), baseY, 0f);
             yield return null;
         }
         t.position = new Vector3(toX, baseY, 0f);
+        Animate(playerIdle);
+    }
+
+    void Animate(Sprite[] frames)
+    {
+        if (playerFrames != null && frames != null && frames.Length > 0)
+            playerFrames.Play(frames);
+    }
+
+    static IEnumerator Darken(SpriteRenderer sr, Color to, float seconds)
+    {
+        Color from = sr.color;
+        to.a = from.a;
+        for (float k = 0f; k < 1f; k += Time.deltaTime / seconds)
+        {
+            sr.color = Color.Lerp(from, to, k);
+            yield return null;
+        }
+        sr.color = to;
     }
 
     IEnumerator SlowZoom(Transform t, float to, float seconds)

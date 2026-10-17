@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -12,6 +13,19 @@ public static class StoryBuilder
     const string Art = "Assets/Story/Art/";
     const string UnlitMaterial = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat";
     const string OpeningPrefab = "Assets/Story/Prefabs/Opening.prefab";
+
+    /// <summary>Frames 0..3 of one animation, e.g. Frames("Player/Player_Walk").</summary>
+    static Sprite[] Frames(string name) =>
+        Enumerable.Range(0, 4).Select(i => AssetDatabase.LoadAssetAtPath<Sprite>($"{Art}{name}_{i}.png")).ToArray();
+
+    static Flipbook AddFlipbook(SpriteRenderer sr, Sprite[] frames, float fps)
+    {
+        sr.sprite = frames[0];
+        var book = sr.gameObject.AddComponent<Flipbook>();
+        book.frames = frames;
+        book.framesPerSecond = fps;
+        return book;
+    }
 
     [MenuItem("Tools/Oogabooga/Story/Build Opening Prefab")]
     public static void BuildOpening()
@@ -29,6 +43,8 @@ public static class StoryBuilder
     [MenuItem("Tools/Oogabooga/Story/Build Ending Scene")]
     public static void BuildEnding()
     {
+        if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            return; // this replaces the open scene: don't lose unsaved work
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         var unlit = AssetDatabase.LoadAssetAtPath<Material>(UnlitMaterial);
 
@@ -59,8 +75,13 @@ public static class StoryBuilder
         director.docks = Sprite("Docks", "Ending_Docks", Vector3.zero, 0);
         director.shadowView = Sprite("Shadow's View", "Ending_ShadowView", Vector3.zero, 1);
         director.hospital = Sprite("Hospital", "Ending_Hospital", Vector3.zero, 2);
-        director.shadow = Sprite("Shadow", "Story_Shadow", new Vector3(director.shadowX, floorY, 0f), 4);
-        director.player = Sprite("Player", "Story_Player", new Vector3(director.doorX, floorY, 0f), 5);
+        // Both sprites are pivoted at the body's centre: the player is 1 unit tall, the shadow 1.5.
+        director.shadow = Sprite("Shadow", "Shadow/Shadow_0", new Vector3(director.shadowX, floorY + 0.75f, 0f), 4);
+        AddFlipbook(director.shadow, Frames("Shadow/Shadow"), 7f);
+        director.player = Sprite("Player", "Player/Player_Idle_0", new Vector3(director.doorX, floorY + 0.5f, 0f), 5);
+        director.playerIdle = Frames("Player/Player_Idle");
+        director.playerWalk = Frames("Player/Player_Walk");
+        AddFlipbook(director.player, director.playerIdle, 4f);
         director.shadowAppears = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/sfx/eeerie sound.mp3");
         director.darkSting = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/sfx/monster sound.mp3");
         director.fireLoop = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/sfx/fire sfx.mp3");
@@ -73,6 +94,8 @@ public static class StoryBuilder
     [MenuItem("Tools/Oogabooga/Story/Build Opening Test Scene")]
     public static void BuildOpeningTest()
     {
+        if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            return; // this replaces the open scene: don't lose unsaved work
         if (AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab) == null)
             BuildOpening();
         // A copy of room 1 (Scene1) with the opening dropped in, so the real scene stays untouched.
@@ -80,8 +103,46 @@ public static class StoryBuilder
         AssetDatabase.CopyAsset("Assets/Scenes/Scene1.unity", "Assets/Story/Scenes/OpeningTest.unity");
         var scene = EditorSceneManager.OpenScene("Assets/Story/Scenes/OpeningTest.unity");
         PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab), scene);
+        DressCharacters(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log("STORY opening test scene saved");
+    }
+
+    /// <summary>
+    /// Puts the new art on room 1's placeholder squares (in the test copy only): the player's
+    /// frames into PlayerAnimator, the shadow's smoke onto the monster.
+    /// </summary>
+    static void DressCharacters(UnityEngine.SceneManagement.Scene scene)
+    {
+        var all = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<Transform>(true)).ToArray();
+
+        var animator = all.Select(t => t.GetComponent<PlayerAnimator>()).FirstOrDefault(a => a != null);
+        if (animator != null)
+        {
+            var so = new SerializedObject(animator);
+            foreach (var (field, name) in new[] { ("idleFrames", "Idle"), ("walkFrames", "Walk"), ("jumpFrames", "Jump"), ("scareFrames", "Scare") })
+            {
+                var prop = so.FindProperty(field);
+                Sprite[] frames = Frames("Player/Player_" + name);
+                prop.arraySize = frames.Length;
+                for (int i = 0; i < frames.Length; i++)
+                    prop.GetArrayElementAtIndex(i).objectReferenceValue = frames[i];
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            animator.GetComponent<SpriteRenderer>().sprite = Frames("Player/Player_Idle")[0];
+        }
+        else
+            Debug.LogWarning("STORY no PlayerAnimator found, player art not set");
+
+        var monster = all.FirstOrDefault(t => t.name == "monster")?.GetComponent<SpriteRenderer>();
+        if (monster != null)
+        {
+            monster.color = Color.white;
+            monster.transform.localScale = Vector3.one;
+            AddFlipbook(monster, Frames("Shadow/Shadow"), 7f);
+        }
+        else
+            Debug.LogWarning("STORY no 'monster' sprite found, shadow art not set");
     }
 
     /// <summary>Command line: build everything.</summary>
