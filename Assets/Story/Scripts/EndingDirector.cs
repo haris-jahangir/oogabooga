@@ -44,6 +44,9 @@ public class EndingDirector : MonoBehaviour
     [TextArea(1, 3)] public string lightCaption2 = "You were pulled out of the Pier 3 fire. You're alive.";
     public string lightTitle = "Ending 2 of 2: Into the Light";
 
+    [Tooltip("The font for all the words (Special Elite: a worn typewriter). Empty = Unity's default.")]
+    public Font font;
+
     [Header("Sound (optional)")]
     public AudioClip shadowAppears;
     public AudioClip darkSting;
@@ -155,7 +158,7 @@ public class EndingDirector : MonoBehaviour
         yield return FadeScreen(Color.black, 0f, 1f, 1.5f);
         titleText.text = "THE END";
         subTitleText.text = ending;
-        hintText.text = "Press E to play again";
+        hintText.text = "Press E to return to the title";
         yield return FadeTexts(0f, 1f, 1.2f, titleText, subTitleText, hintText);
         yield return WaitForAdvance();
         SceneManager.LoadScene(0);
@@ -398,7 +401,7 @@ public class EndingDirector : MonoBehaviour
         var scaler = root.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
-        Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        Font font = this.font != null ? this.font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
         box = Rect(root.transform, "Dialogue Box", new Vector2(0.12f, 0.04f), new Vector2(0.88f, 0.27f)).gameObject.AddComponent<Image>();
         box.color = new Color(0.02f, 0.02f, 0.05f, 0.88f);

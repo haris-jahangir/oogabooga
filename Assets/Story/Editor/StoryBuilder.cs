@@ -15,6 +15,7 @@ public static class StoryBuilder
     const string OpeningPrefab = "Assets/Story/Prefabs/Opening.prefab";
     // The player's drawing is 1.4 units tall (Player frames at 137 PPU), the shadow 1.5 times that.
     const float PlayerHeight = 1.4f, ShadowHeight = 2.1f;
+    const string StoryFont = "Assets/Story/Fonts/SpecialElite-Regular.ttf";
 
     /// <summary>Frames 0..3 of one animation, e.g. Frames("Player/Player_Walk").</summary>
     static Sprite[] Frames(string name) =>
@@ -34,7 +35,7 @@ public static class StoryBuilder
     public static void BuildOpening()
     {
         var go = new GameObject("Opening");
-        go.AddComponent<WakeUpIntro>();
+        go.AddComponent<WakeUpIntro>().font = AssetDatabase.LoadAssetAtPath<Font>(StoryFont);
         var spark = go.AddComponent<SwitchSpark>();
         spark.usedSprite = AssetDatabase.LoadAssetAtPath<Sprite>(Art + "Switch_On.png");
         PrefabUtility.SaveAsPrefabAsset(go, OpeningPrefab);
@@ -74,6 +75,7 @@ public static class StoryBuilder
         }
 
         var director = new GameObject("Ending Director").AddComponent<EndingDirector>();
+        director.font = AssetDatabase.LoadAssetAtPath<Font>(StoryFont);
         director.docks = Sprite("Docks", "Ending_Docks", Vector3.zero, 0);
         director.shadowView = Sprite("Shadow's View", "Ending_ShadowView", Vector3.zero, 1);
         director.hospital = Sprite("Hospital", "Ending_Hospital", Vector3.zero, 2);
@@ -187,10 +189,11 @@ public static class StoryBuilder
         SetAll<RoofExit>(level2, "nextScene", p => p.stringValue = "Ending");
         EditorSceneManager.SaveScene(level2);
 
-        // Ending loads build index 0 to play again, so room 1 goes first.
-        EditorBuildSettings.scenes = new[] { "Assets/Scenes/Scene1.unity", "Assets/Scenes/Scene2.unity", "Assets/Story/Scenes/Ending.unity" }
+        // The menu (if there is one) first: the ending goes back to build index 0.
+        EditorBuildSettings.scenes = new[] { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/Scene1.unity", "Assets/Scenes/Scene2.unity", "Assets/Story/Scenes/Ending.unity" }
+            .Where(path => System.IO.File.Exists(path))
             .Select(path => new EditorBuildSettingsScene(path, true)).ToArray();
-        Debug.Log("STORY wired: Scene1 -> Scene2 -> Ending");
+        Debug.Log("STORY wired: " + string.Join(" -> ", EditorBuildSettings.scenes.Select(s => System.IO.Path.GetFileNameWithoutExtension(s.path))));
     }
 
     static void SetAll<T>(UnityEngine.SceneManagement.Scene scene, string field, System.Action<SerializedProperty> set) where T : Component

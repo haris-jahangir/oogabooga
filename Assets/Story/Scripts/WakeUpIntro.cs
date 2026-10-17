@@ -3,9 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// The opening of room 1: the player wakes up somewhere dark, lying on the floor. The eyelids
-/// flutter open, the view sways and clears, the player gets up, and "Where am I?" types itself out,
-/// seen double until the eyes focus. Then the player can move.
+/// The opening of room 1: the player wakes up somewhere dark. The eyelids flutter open, the haze
+/// clears, and "Where am I?" fades in and out, worn and quiet. Then the player can move.
 /// Put it on any object in the scene. It draws its own screen overlay, so it needs no setup.
 /// </summary>
 public class WakeUpIntro : MonoBehaviour
@@ -14,36 +13,25 @@ public class WakeUpIntro : MonoBehaviour
     public string line = "Where am I?";
     [Tooltip("A smaller line under it. Leave empty for none.")]
     public string subtitle = "";
+    [Tooltip("The line's font (Special Elite: a worn typewriter). Empty = Unity's default.")]
+    public Font font;
     [Tooltip("Optional: breathing or a heartbeat while waking up.")]
     public AudioClip wakeSound;
     [Tooltip("Optional: the voice line, played when the line appears.")]
     public AudioClip voiceLine;
-    [Tooltip("How far the view tilts while groggy, in degrees.")]
-    public float sway = 3f;
-    [Tooltip("Start lying on the floor and get up once the eyes are open.")]
-    public bool startLying = true;
-    [Tooltip("How far the player sinks when lying down, so the body rests on the floor (units).")]
-    public float lieDrop = 0.36f;
 
     PlayerMovement player;
-    Rigidbody2D body;
     Transform cam;
     GameObject overlay;
     RectTransform topLid, bottomLid;
     Image haze;
     Text caption, captionSub;
-    Shadow ghost; // the line's double image, before the eyes focus
-    float swayLeft;
 
     IEnumerator Start()
     {
         player = FindFirstObjectByType<PlayerMovement>();
         if (player != null)
-        {
             player.CanMove = false;
-            if (startLying)
-                LieDown();
-        }
         if (Camera.main != null)
             cam = Camera.main.transform;
         BuildOverlay();
@@ -52,7 +40,6 @@ public class WakeUpIntro : MonoBehaviour
 
         // Black, then the eyes try to open, close again, and open for real.
         yield return new WaitForSeconds(1f);
-        swayLeft = 1f;
         yield return MoveLids(0f, 0.3f, 0.7f);
         yield return MoveLids(0.3f, 0.04f, 0.3f);
         yield return new WaitForSeconds(0.4f);
@@ -60,68 +47,16 @@ public class WakeUpIntro : MonoBehaviour
         yield return new WaitForSeconds(0.25f);
         yield return MoveLids(0.55f, 1f, 1f);
 
-        // The haze clears, the player gets up, and the line appears.
+        // The haze clears and the line comes up slowly, stays a moment, and goes.
         StartCoroutine(Fade(haze, haze.color.a, 0f, 1.5f));
-        if (body != null)
-            yield return GetUp();
         Play(voiceLine);
-        // Typed out a letter at a time, a pause after each word, like a thought forming.
-        caption.text = "";
-        SetAlpha(caption, 1f);
-        SetAlpha(captionSub, 0.7f);
-        foreach (char c in line)
-        {
-            caption.text += c;
-            yield return new WaitForSeconds(c == ' ' ? 0.25f : 0.09f);
-        }
+        yield return FadeCaption(0f, 1f, 1.4f);
         if (player != null)
             player.CanMove = true;
-        // The double image wavers, then drifts back into the line as the eyes focus.
-        for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f)
-        {
-            ghost.effectDistance = new Vector2(Mathf.Lerp(18f, 0f, t * t) * (1f + Mathf.Sin(t * 30f) * 0.25f), 0f);
-            yield return null;
-        }
-        yield return FadeCaption(1f, 0f, 0.8f);
+        yield return new WaitForSeconds(2f);
+        yield return FadeCaption(1f, 0f, 1.4f);
         Destroy(overlay);
-        if (cam != null)
-            cam.rotation = Quaternion.identity;
-        enabled = false; // hand the camera's rotation back
-    }
-
-    void LateUpdate()
-    {
-        if (cam == null || swayLeft <= 0f)
-            return;
-        // A slow, groggy tilt that settles as the player comes round.
-        swayLeft = Mathf.MoveTowards(swayLeft, 0f, Time.deltaTime / 4f);
-        cam.rotation = Quaternion.Euler(0f, 0f, Mathf.Sin(Time.time * 1.3f) * sway * swayLeft);
-    }
-
-    void LieDown()
-    {
-        // Physics off while lying, or the body would be pushed back out of the floor.
-        if (!player.TryGetComponent(out body))
-            return;
-        body.simulated = false;
-        player.transform.SetPositionAndRotation(player.transform.position + Vector3.down * lieDrop, Quaternion.Euler(0f, 0f, 90f));
-    }
-
-    IEnumerator GetUp()
-    {
-        Transform t = player.transform;
-        Vector3 lying = t.position, standing = lying + Vector3.up * lieDrop;
-        const float seconds = 0.9f;
-        for (float k = 0f; k < 1f; k += Time.deltaTime / seconds)
-        {
-            // Pushes up slowly, then swings upright, a little unsteady.
-            float e = 1f - Mathf.Pow(1f - k, 3f);
-            float wobble = Mathf.Sin(k * Mathf.PI * 3f) * (1f - k) * 6f;
-            t.SetPositionAndRotation(Vector3.Lerp(lying, standing, Mathf.Sqrt(k)), Quaternion.Euler(0f, 0f, 90f * (1f - e) + wobble));
-            yield return null;
-        }
-        t.SetPositionAndRotation(standing, Quaternion.identity);
-        body.simulated = true;
+        enabled = false;
     }
 
     IEnumerator MoveLids(float from, float to, float seconds)
@@ -191,12 +126,9 @@ public class WakeUpIntro : MonoBehaviour
         topLid = Panel("Top Eyelid", Color.black, new Vector2(0f, 0.5f), Vector2.one);
         bottomLid = Panel("Bottom Eyelid", Color.black, Vector2.zero, new Vector2(1f, 0.5f));
 
-        Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        caption = MakeText("Line", line, 48, font, new Vector2(0f, -120f));
-        ghost = caption.gameObject.AddComponent<Shadow>();
-        ghost.effectColor = new Color(0.8f, 0.8f, 0.85f, 0.3f);
-        ghost.effectDistance = new Vector2(18f, 0f);
-        captionSub = MakeText("Subtitle", subtitle, 30, font, new Vector2(0f, -185f));
+        Font face = font != null ? font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        caption = MakeText("Line", line, 52, face, new Vector2(0f, -150f));
+        captionSub = MakeText("Subtitle", subtitle, 30, face, new Vector2(0f, -215f));
         SetAlpha(caption, 0f);
         SetAlpha(captionSub, 0f);
     }
@@ -224,10 +156,10 @@ public class WakeUpIntro : MonoBehaviour
         text.fontSize = size;
         text.alignment = TextAnchor.MiddleCenter;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.color = new Color(0.78f, 0.77f, 0.74f); // pale ash: dim, not bright white
+        text.color = new Color(0.86f, 0.84f, 0.79f); // old paper, not bright white
         text.text = value;
         var outline = rt.gameObject.AddComponent<Outline>();
-        outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+        outline.effectColor = new Color(0f, 0f, 0f, 0.7f);
         return text;
     }
 }
