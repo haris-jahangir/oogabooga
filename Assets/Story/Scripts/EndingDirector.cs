@@ -39,10 +39,10 @@ public class EndingDirector : MonoBehaviour
     public string choiceLight = "Walk toward the light";
     [TextArea(1, 3)] public string darkCaption1 = "You chose the dark.";
     [TextArea(1, 3)] public string darkCaption2 = "Somewhere inside, someone opens their eyes...";
-    public string darkTitle = "Ending 1 of 2: The Next Shadow";
+    public string darkTitle = "AFTERLIFE  -  Ending 1 of 2: The Next Shadow";
     [TextArea(1, 3)] public string lightCaption1 = "\"...stay with us... there you are.\"";
     [TextArea(1, 3)] public string lightCaption2 = "You were pulled out of the Pier 3 fire. You're alive.";
-    public string lightTitle = "Ending 2 of 2: Into the Light";
+    public string lightTitle = "AFTERLIFE  -  Ending 2 of 2: Into the Light";
 
     [Tooltip("The font for all the words (Special Elite: a worn typewriter). Empty = Unity's default.")]
     public Font font;
@@ -68,6 +68,7 @@ public class EndingDirector : MonoBehaviour
 
     IEnumerator Start()
     {
+        Cursor.visible = false; // a cutscene: keys only (the menu shows the cursor again)
         sfx = gameObject.AddComponent<AudioSource>();
         player.TryGetComponent(out playerFrames);
         Animate(playerIdle);

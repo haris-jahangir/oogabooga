@@ -304,8 +304,8 @@ MonoBehaviour:
   tagline: 
   footer: haris jahangir
   firstScene: Scene1
-  titleFont: {fileID: 0}
-  menuFont: {fileID: 0}
+  titleFont: {fileID: 12800000, guid: 68cc832361644153a529dd3aa9ba0a8c, type: 3}
+  menuFont: {fileID: 12800000, guid: 4fadb496de0946708eedd48a45923192, type: 3}
   titleColor: {r: 0.55, g: 0.05, b: 0.04, a: 1}
   glowColor: {r: 0.8, g: 0.18, b: 0.04, a: 0.22}
   music: {fileID: 8300000, guid: 763644ee376df2a4c84cef7acbccea45, type: 3}

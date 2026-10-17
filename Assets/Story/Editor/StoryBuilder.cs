@@ -16,6 +16,8 @@ public static class StoryBuilder
     // The player's drawing is 1.4 units tall (Player frames at 137 PPU), the shadow 1.5 times that.
     const float PlayerHeight = 1.4f, ShadowHeight = 2.1f;
     const string StoryFont = "Assets/Story/Fonts/SpecialElite-Regular.ttf";
+    // Free stand-ins for Chiller and Stencil, which only Windows has: the menu looks the same everywhere.
+    const string TitleFont = "Assets/Story/Fonts/Creepster-Regular.ttf", MenuFont = "Assets/Story/Fonts/StardosStencil-Bold.ttf";
 
     /// <summary>Frames 0..3 of one animation, e.g. Frames("Player/Player_Walk").</summary>
     static Sprite[] Frames(string name) =>
@@ -188,6 +190,15 @@ public static class StoryBuilder
         DressCharacters(level2);
         SetAll<RoofExit>(level2, "nextScene", p => p.stringValue = "Ending");
         EditorSceneManager.SaveScene(level2);
+
+        // The menu's fonts travel with the game.
+        if (System.IO.File.Exists("Assets/Scenes/MainMenu.unity"))
+        {
+            var menu = EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity");
+            SetAll<MainMenu>(menu, "titleFont", p => p.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Font>(TitleFont));
+            SetAll<MainMenu>(menu, "menuFont", p => p.objectReferenceValue = AssetDatabase.LoadAssetAtPath<Font>(MenuFont));
+            EditorSceneManager.SaveScene(menu);
+        }
 
         // The menu (if there is one) first: the ending goes back to build index 0.
         EditorBuildSettings.scenes = new[] { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/Scene1.unity", "Assets/Scenes/Scene2.unity", "Assets/Story/Scenes/Ending.unity" }
