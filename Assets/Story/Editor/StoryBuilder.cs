@@ -5,8 +5,8 @@ using UnityEngine;
 
 /// <summary>
 /// Tools > Oogabooga > Story: builds the opening prefab, the ending scene, and a test copy of
-/// room 1 with the opening in it. Everything is written under Assets/Story; no existing scene
-/// or script is changed.
+/// room 1 with the opening in it, all under Assets/Story. Wire Story Into Game then puts the
+/// story and the character art into the real levels and links Scene1 -> Scene2 -> Ending.
 /// </summary>
 public static class StoryBuilder
 {
@@ -23,7 +23,8 @@ public static class StoryBuilder
     static Flipbook AddFlipbook(SpriteRenderer sr, Sprite[] frames, float fps)
     {
         sr.sprite = frames[0];
-        var book = sr.gameObject.AddComponent<Flipbook>();
+        if (!sr.TryGetComponent(out Flipbook book))
+            book = sr.gameObject.AddComponent<Flipbook>();
         book.frames = frames;
         book.framesPerSecond = fps;
         return book;
@@ -35,7 +36,6 @@ public static class StoryBuilder
         var go = new GameObject("Opening");
         go.AddComponent<WakeUpIntro>();
         var spark = go.AddComponent<SwitchSpark>();
-        spark.sparkMaterial = AssetDatabase.LoadAssetAtPath<Material>(UnlitMaterial);
         spark.usedSprite = AssetDatabase.LoadAssetAtPath<Sprite>(Art + "Switch_On.png");
         PrefabUtility.SaveAsPrefabAsset(go, OpeningPrefab);
         Object.DestroyImmediate(go);
@@ -164,11 +164,51 @@ public static class StoryBuilder
         Debug.Log("STORY game icon set: " + (icon != null));
     }
 
+    [MenuItem("Tools/Oogabooga/Story/Wire Story Into Game")]
+    public static void WireGame()
+    {
+        if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            return;
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab) == null)
+            BuildOpening();
+
+        // Room 1: the wake-up opening, the art, and the keypad opens the way to level 2.
+        var room1 = EditorSceneManager.OpenScene("Assets/Scenes/Scene1.unity");
+        if (Object.FindFirstObjectByType<WakeUpIntro>() == null)
+            PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab), room1);
+        DressCharacters(room1);
+        SetAll<KeypadLock>(room1, "nextScene", p => p.stringValue = "Scene2");
+        SetAll<PlayerMovement>(room1, "moveSpeed", p => p.floatValue = 10f); // level 2's speed
+        EditorSceneManager.SaveScene(room1);
+
+        // Level 2: the art, and the roof exit leads to the ending.
+        var level2 = EditorSceneManager.OpenScene("Assets/Scenes/Scene2.unity");
+        DressCharacters(level2);
+        SetAll<RoofExit>(level2, "nextScene", p => p.stringValue = "Ending");
+        EditorSceneManager.SaveScene(level2);
+
+        // Ending loads build index 0 to play again, so room 1 goes first.
+        EditorBuildSettings.scenes = new[] { "Assets/Scenes/Scene1.unity", "Assets/Scenes/Scene2.unity", "Assets/Story/Scenes/Ending.unity" }
+            .Select(path => new EditorBuildSettingsScene(path, true)).ToArray();
+        Debug.Log("STORY wired: Scene1 -> Scene2 -> Ending");
+    }
+
+    static void SetAll<T>(UnityEngine.SceneManagement.Scene scene, string field, System.Action<SerializedProperty> set) where T : Component
+    {
+        foreach (T c in scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<T>(true)))
+        {
+            var so = new SerializedObject(c);
+            set(so.FindProperty(field));
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+
     /// <summary>Command line: build everything.</summary>
     public static void BuildAll()
     {
         BuildOpening();
         BuildEnding();
         BuildOpeningTest();
+        WireGame();
     }
 }
