@@ -20,6 +20,7 @@ public static class StoryBuilder
         go.AddComponent<WakeUpIntro>();
         var spark = go.AddComponent<SwitchSpark>();
         spark.sparkMaterial = AssetDatabase.LoadAssetAtPath<Material>(UnlitMaterial);
+        spark.usedSprite = AssetDatabase.LoadAssetAtPath<Sprite>(Art + "Switch_On.png");
         PrefabUtility.SaveAsPrefabAsset(go, OpeningPrefab);
         Object.DestroyImmediate(go);
         Debug.Log("STORY opening prefab saved: " + OpeningPrefab);

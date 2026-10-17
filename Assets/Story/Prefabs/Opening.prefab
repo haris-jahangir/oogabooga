@@ -68,4 +68,5 @@ MonoBehaviour:
   sparkCount: 18
   shakeStrength: 0.3
   shakeSeconds: 0.6
+  usedSprite: {fileID: 21300000, guid: b6e03df672144c9a97cb4f35e645da2b, type: 3}
   sparkMaterial: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}

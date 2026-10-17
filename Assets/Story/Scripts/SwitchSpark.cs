@@ -20,6 +20,8 @@ public class SwitchSpark : MonoBehaviour
     public int sparkCount = 18;
     public float shakeStrength = 0.3f;
     public float shakeSeconds = 0.6f;
+    [Tooltip("The switch's sprite after it's used (Switch_On: lever down, scorched). Leave empty to keep it.")]
+    public Sprite usedSprite;
     [Tooltip("An unlit sprite material, so sparks glow in the dark (URP's Sprite-Unlit-Default).")]
     public Material sparkMaterial;
 
@@ -50,6 +52,8 @@ public class SwitchSpark : MonoBehaviour
         if (sparkSound != null)
             AudioSource.PlayClipAtPoint(sparkSound, cam != null ? cam.position : at);
 
+        if (usedSprite != null && sparkPoint != null && sparkPoint.TryGetComponent(out SpriteRenderer switchSprite))
+            switchSprite.sprite = usedSprite;
         StartCoroutine(FlashLight(at));
         StartCoroutine(ScreenFlash());
         for (int i = 0; i < sparkCount; i++)
