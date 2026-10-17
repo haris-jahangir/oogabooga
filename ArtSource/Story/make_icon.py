@@ -11,7 +11,7 @@ HERE = Path(__file__).parent
 OUT = HERE.parent.parent / "Assets/Story/Art/Icon/GameIcon.png"
 N = 1024
 SPLIT_X = 140        # the nose, in Player_Cutout.png
-SHADOW_EYE = (165, 170)
+SHADOW_EYE = (161, 172)
 CROP = (0, 0, 233, 236)  # hat to collar
 HAT_CENTRE_X = 124
 

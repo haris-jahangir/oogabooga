@@ -18,7 +18,7 @@ OUT = HERE.parent.parent / "Assets/Story/Art"
 BODY = 192            # body height in pixels (1.4 units at 137 PPU)
 CANVAS = (160, 240)   # body centred, room to stretch and tilt
 FEET = (CANVAS[0] // 2, CANVAS[1] // 2 + BODY // 2)
-EYES = [(116, 167), (165, 170)]  # in Player_Cutout.png
+EYES = [(114, 168), (161, 172)]  # in Player_Cutout.png
 
 src = Image.open(HERE / "Player_Cutout.png").convert("RGBA")
 scale = BODY / src.height
