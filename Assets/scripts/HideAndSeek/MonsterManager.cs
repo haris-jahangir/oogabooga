@@ -306,14 +306,19 @@ public class MonsterManager : MonoBehaviour
             Bounds f = fire.Area;
             Bounds m = body.bounds;
             bool overlapsX = m.max.x > f.min.x - fireClearance && m.min.x < f.max.x + fireClearance;
-            bool overlapsY = m.max.y > f.min.y && m.min.y < f.max.y;
+            bool overlapsY = m.max.y > f.min.y - fireClearance && m.min.y < f.max.y + fireClearance;
             if (!overlapsX || !overlapsY)
                 continue;
 
-            float shift = fire.GrowDirection == Fire.Direction.Right
-                ? (f.max.x + fireClearance) - m.min.x
-                : (f.min.x - fireClearance) - m.max.x;
-            monster.transform.position += new Vector3(shift, 0f, 0f);
+            // Push it just past the spreading edge (sideways, or above/below a rising fire).
+            Vector3 shift = fire.GrowDirection switch
+            {
+                Fire.Direction.Left => new Vector3(f.min.x - fireClearance - m.max.x, 0f, 0f),
+                Fire.Direction.Up => new Vector3(0f, f.max.y + fireClearance - m.min.y, 0f),
+                Fire.Direction.Down => new Vector3(0f, f.min.y - fireClearance - m.max.y, 0f),
+                _ => new Vector3(f.max.x + fireClearance - m.min.x, 0f, 0f),
+            };
+            monster.transform.position += shift;
         }
     }
 

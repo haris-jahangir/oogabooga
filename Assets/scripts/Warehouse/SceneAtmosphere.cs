@@ -25,6 +25,11 @@ public class SceneAtmosphere : MonoBehaviour
     [SerializeField] float lightUpDuration = 1.5f;
 
     [Header("Spot Lights")]
+    [Tooltip("Multiplies every lamp's brightness. Dark-coloured walls need strong light to show.")]
+    [SerializeField] float lampBrightness = 4f;
+    [Tooltip("Draw a soft beam of light under each lamp.")]
+    [SerializeField] bool lampBeams = true;
+    [Range(0f, 0.6f)] [SerializeField] float beamOpacity = 0.16f;
     [Tooltip("If the scene has no Lamps, hang some automatically with these settings.")]
     [SerializeField] bool autoPlaceLamps = true;
     [SerializeField] LampPlacer.Settings lampSettings = new();
@@ -89,6 +94,8 @@ public class SceneAtmosphere : MonoBehaviour
         if (styleHidingSpots)
             StyleHidingSpots();
 
+        Lamp.Brightness = lampBrightness;
+        Lamp.BeamOpacity = lampBeams ? beamOpacity : 0f;
         lamps = FindObjectsByType<Lamp>(FindObjectsSortMode.None);
         if (lamps.Length == 0 && autoPlaceLamps)
             lamps = LampPlacer.Place(new GameObject("Spot Lights").transform, lampSettings).ToArray();
@@ -153,11 +160,12 @@ public class SceneAtmosphere : MonoBehaviour
 
         if (fireLight != null && fire != null)
         {
-            // Sit on the fire's spreading edge, halfway up.
+            // Sit on the fire's spreading edge, at the point nearest the player.
             Bounds b = fire.Area;
-            float edge = fire.GrowDirection == Fire.Direction.Right ? b.max.x : b.min.x;
-            float y = player != null ? Mathf.Clamp(player.position.y, b.min.y, b.max.y) : b.center.y;
-            fireLight.transform.position = new Vector3(edge, y, 0f);
+            Vector3 p = player != null ? player.position : b.center;
+            fireLight.transform.position = fire.IsVertical
+                ? new Vector3(Mathf.Clamp(p.x, b.min.x, b.max.x), fire.FrontEdge, 0f)
+                : new Vector3(fire.FrontEdge, Mathf.Clamp(p.y, b.min.y, b.max.y), 0f);
             float n = Mathf.PerlinNoise(flickerSeed, Time.time * 6f);
             fireLight.intensity = fireGlow * (1f - fireFlicker + fireFlicker * 2f * n);
         }
@@ -174,7 +182,11 @@ public class SceneAtmosphere : MonoBehaviour
         if (fire == null || player == null)
             return fireVolumeFar;
         Bounds b = fire.Area;
-        float distance = Mathf.Max(0f, Mathf.Max(b.min.x - player.position.x, player.position.x - b.max.x));
+        // Distance from the player to the nearest part of the fire, whichever way it grows.
+        Vector3 p = player.position;
+        float dx = Mathf.Max(0f, Mathf.Max(b.min.x - p.x, p.x - b.max.x));
+        float dy = Mathf.Max(0f, Mathf.Max(b.min.y - p.y, p.y - b.max.y));
+        float distance = Mathf.Sqrt(dx * dx + dy * dy);
         float k = Mathf.InverseLerp(fireFarDistance, fireNearDistance, distance);
         return Mathf.Lerp(fireVolumeFar, fireVolumeNear, k);
     }

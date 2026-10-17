@@ -5,7 +5,8 @@ using UnityEngine;
 /// Holds the level still until the switch is used: the fire and the monster wait, and
 /// the fog/black cover hides the warehouse. Begin() fades the fog away and starts them.
 ///
-/// Wire it: on the switch's Interactable, add Begin() to On Used.
+/// Wire it: on the switch's Interactable, add Begin() to On Used. For a level with no switch,
+/// tick Start Automatically instead.
 /// </summary>
 public class LevelStarter : MonoBehaviour
 {
@@ -17,6 +18,9 @@ public class LevelStarter : MonoBehaviour
     [SerializeField] float fadeDuration = 1.5f;
     [Tooltip("Optional sound when the switch is flipped.")]
     [SerializeField] AudioClip switchSound;
+    [Tooltip("Begin on its own a moment after the scene loads (for levels without a switch).")]
+    [SerializeField] bool startAutomatically;
+    [SerializeField] float autoStartDelay = 2f;
 
     bool started;
 
@@ -42,6 +46,12 @@ public class LevelStarter : MonoBehaviour
         foreach (Behaviour b in startOnSwitch)
             if (b != null)
                 b.enabled = false;
+    }
+
+    void Start()
+    {
+        if (startAutomatically)
+            Invoke(nameof(Begin), autoStartDelay);
     }
 
     /// <summary>Called by the switch: fade the fog and start the fire and the monster.</summary>

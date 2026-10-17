@@ -3,19 +3,21 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// A wall of fire that grows over time. By default its left edge stays put and it spreads
-/// to the right (switch Grow Direction to spread left instead). When the fire covers the
-/// middle of a HidingSpot, that spot burns and can no longer hide the player.
+/// to the right; Grow Direction can also be Left, Up (rising from the floor, like a level
+/// filling with flames) or Down. When the fire covers the middle of a HidingSpot, that spot
+/// burns and can no longer hide the player.
 /// Touching the fire is game over.
 ///
-/// Setup: put a fire sprite where the fire should start, tall enough to cover the play
-/// area, and add this script. The sprite repeats (Draw Mode is set to Tiled) instead of
+/// Setup: put a fire sprite where the fire should start, covering the play area across
+/// (tall for Right/Left, wide for Up/Down), and add this script. The sprite repeats (Draw Mode is set to Tiled) instead of
 /// stretching; set the image's Mesh Type to Full Rect so the tiling looks right.
 /// The fire never scales or moves its children, and needs no collider.
 /// </summary>
 [RequireComponent(typeof(SpriteRenderer))]
 public class Fire : MonoBehaviour
 {
-    public enum Direction { Right, Left }
+    // New values go at the end so scenes keep their saved choice.
+    public enum Direction { Right, Left, Up, Down }
 
     [Header("Growth")]
     [Tooltip("Which way the fire spreads. The opposite edge stays fixed.")]
@@ -26,7 +28,7 @@ public class Fire : MonoBehaviour
     [SerializeField] float growSpeed = 0.3f;
     [Tooltip("How much faster it spreads every second. 0 = constant speed.")]
     [SerializeField] float acceleration = 0.01f;
-    [Tooltip("Widest the fire can get, in units. 0 = no limit.")]
+    [Tooltip("Furthest the fire can grow (its width, or height for Up/Down), in units. 0 = no limit.")]
     [SerializeField] float maxWidth = 0f;
 
     [Header("Burning")]
@@ -41,8 +43,9 @@ public class Fire : MonoBehaviour
     MonsterManager monsterManager;
     Collider2D playerCollider;
 
-    float anchorEdge;   // the edge that stays fixed
-    float width;
+    float anchorEdge;   // the edge that stays fixed (an x for Right/Left, a y for Up/Down)
+    float length;       // size along the growth direction
+    float across;       // size the other way, which never changes
     float speed;
     float timer;
     bool playerBurned;
@@ -52,6 +55,34 @@ public class Fire : MonoBehaviour
 
     /// <summary>Which way the fire is spreading.</summary>
     public Direction GrowDirection => growDirection;
+
+    /// <summary>True when the fire grows up or down instead of sideways.</summary>
+    public bool IsVertical => growDirection == Direction.Up || growDirection == Direction.Down;
+
+    /// <summary>The direction the fire spreads in, as a unit vector.</summary>
+    public Vector2 GrowVector => growDirection switch
+    {
+        Direction.Left => Vector2.left,
+        Direction.Up => Vector2.up,
+        Direction.Down => Vector2.down,
+        _ => Vector2.right,
+    };
+
+    /// <summary>The x (Right/Left) or y (Up/Down) of the edge that is spreading.</summary>
+    public float FrontEdge
+    {
+        get
+        {
+            Bounds b = Area;
+            return growDirection switch
+            {
+                Direction.Left => b.min.x,
+                Direction.Up => b.max.y,
+                Direction.Down => b.min.y,
+                _ => b.max.x,
+            };
+        }
+    }
 
     void Awake()
     {
@@ -63,11 +94,11 @@ public class Fire : MonoBehaviour
 
         // Remember the visible size, then switch to Tiled so we can widen it without scaling.
         Bounds start = spriteRenderer.bounds;
-        anchorEdge = growDirection == Direction.Right ? start.min.x : start.max.x;
-        width = start.size.x;
-        float height = start.size.y;
+        anchorEdge = AnchorOf(start);
+        length = IsVertical ? start.size.y : start.size.x;
+        across = IsVertical ? start.size.x : start.size.y;
         spriteRenderer.drawMode = SpriteDrawMode.Tiled;
-        SetVisualSize(width, height);
+        SetVisualSize();
 
         speed = growSpeed;
     }
@@ -75,13 +106,13 @@ public class Fire : MonoBehaviour
     void Update()
     {
         timer += Time.deltaTime;
-        if (timer >= startDelay && (maxWidth <= 0f || width < maxWidth))
+        if (timer >= startDelay && (maxWidth <= 0f || length < maxWidth))
         {
             speed += acceleration * Time.deltaTime;
-            width += speed * Time.deltaTime;
+            length += speed * Time.deltaTime;
             if (maxWidth > 0f)
-                width = Mathf.Min(width, maxWidth);
-            SetVisualSize(width, spriteRenderer.bounds.size.y);
+                length = Mathf.Min(length, maxWidth);
+            SetVisualSize();
         }
 
         Bounds fire = spriteRenderer.bounds;
@@ -89,18 +120,27 @@ public class Fire : MonoBehaviour
         CheckPlayer(fire);
     }
 
-    void SetVisualSize(float worldWidth, float worldHeight)
+    // The edge opposite the growth direction, which stays fixed.
+    float AnchorOf(Bounds b) => growDirection switch
     {
+        Direction.Left => b.max.x,
+        Direction.Up => b.min.y,
+        Direction.Down => b.max.y,
+        _ => b.min.x,
+    };
+
+    void SetVisualSize()
+    {
+        float worldWidth = IsVertical ? across : length;
+        float worldHeight = IsVertical ? length : across;
         Vector3 scale = transform.lossyScale;
         spriteRenderer.size = new Vector2(
             worldWidth / Mathf.Max(Mathf.Abs(scale.x), 0.0001f),
             worldHeight / Mathf.Max(Mathf.Abs(scale.y), 0.0001f));
 
         // Shift so the anchored edge stays put and the fire only grows the chosen way.
-        Bounds b = spriteRenderer.bounds;
-        float currentEdge = growDirection == Direction.Right ? b.min.x : b.max.x;
-        float drift = anchorEdge - currentEdge;
-        transform.position += new Vector3(drift, 0f, 0f);
+        float drift = anchorEdge - AnchorOf(spriteRenderer.bounds);
+        transform.position += IsVertical ? new Vector3(0f, drift, 0f) : new Vector3(drift, 0f, 0f);
     }
 
     void BurnHidingSpots(Bounds fire)
@@ -111,10 +151,14 @@ public class Fire : MonoBehaviour
         {
             HidingSpot spot = spots[i];
             Bounds b = spot.Bounds;
-            // Burn only once the fire actually covers the middle of the spot.
-            bool reached = b.center.x >= fire.min.x && b.center.x <= fire.max.x;
-            bool sameHeight = b.max.y >= fire.min.y && b.min.y <= fire.max.y;
-            if (!reached || !sameHeight)
+            // Burn only once the fire actually covers the middle of the spot
+            // (along the growth direction) and overlaps it the other way.
+            bool coversX = b.center.x >= fire.min.x && b.center.x <= fire.max.x;
+            bool coversY = b.center.y >= fire.min.y && b.center.y <= fire.max.y;
+            bool overlapsX = b.max.x >= fire.min.x && b.min.x <= fire.max.x;
+            bool overlapsY = b.max.y >= fire.min.y && b.min.y <= fire.max.y;
+            bool reached = IsVertical ? coversY && overlapsX : coversX && overlapsY;
+            if (!reached)
                 continue;
 
             if (burnEffect != null)

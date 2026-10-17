@@ -15,7 +15,10 @@ public static class WarehouseSpotLights
     const string RootName = "Spot Lights";
 
     [MenuItem("Tools/Oogabooga/Place Spot Lights")]
-    static void Place()
+    static void PlaceFromMenu() => Place();
+
+    /// <summary>Replaces the scene's spot lights with a fresh layout. Also used by level builders.</summary>
+    public static void Place()
     {
         GameObject old = GameObject.Find(RootName);
         if (old != null)

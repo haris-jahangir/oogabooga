@@ -142,15 +142,23 @@ public class FireVFX : MonoBehaviour
         }
 
         Bounds a = fire.Area;
-        float edge = fire.GrowDirection == Fire.Direction.Right ? a.max.x : a.min.x;
-        float inward = fire.GrowDirection == Fire.Direction.Right ? -1f : 1f;
+        Vector3 inward = -(Vector3)fire.GrowVector;
+        bool vertical = fire.IsVertical;
+        // The spreading edge: a line across the fire (a tall strip, or a wide one for Up/Down).
+        Vector3 front = vertical ? new Vector3(a.center.x, fire.FrontEdge) : new Vector3(fire.FrontEdge, a.center.y);
+        float span = vertical ? a.size.x : a.size.y;
+        Vector3 Strip(float thickness) => vertical ? new Vector3(span, thickness, 1f) : new Vector3(thickness, span, 1f);
 
-        // The leading edge: a thin tall strip of big flames.
-        Place(edgeFlames, new Vector3(edge + inward * 0.2f, a.center.y), new Vector3(0.6f, a.size.y, 1f), flameRate * a.size.y);
+        // The leading edge: big licking flames.
+        Place(edgeFlames, front + inward * 0.2f, Strip(0.6f), flameRate * span);
         // The body: smaller flames scattered across the whole burning area.
         Place(innerFlames, a.center, new Vector3(a.size.x, a.size.y, 1f), Mathf.Min(400f, flameRate * 0.08f * a.size.x * a.size.y));
-        Place(embers, new Vector3(edge + inward * 0.5f, a.center.y), new Vector3(1.2f, a.size.y, 1f), emberRate * a.size.y * 0.15f);
-        Place(smoke, new Vector3(edge + inward * 0.6f, a.max.y - 0.5f), new Vector3(1.5f + a.size.x * 0.5f, 1f, 1f), smokeRate);
+        Place(embers, front + inward * 0.5f, Strip(1.2f), emberRate * span * 0.15f);
+        // Smoke rolls off the top of the fire.
+        if (vertical)
+            Place(smoke, new Vector3(a.center.x, a.max.y - 0.3f), new Vector3(a.size.x, 1f, 1f), smokeRate * Mathf.Max(1f, a.size.x / 8f));
+        else
+            Place(smoke, new Vector3(front.x + inward.x * 0.6f, a.max.y - 0.5f), new Vector3(1.5f + a.size.x * 0.5f, 1f, 1f), smokeRate);
 
         float pulse = 1f - bodyPulse + bodyPulse * 2f * Mathf.PerlinNoise(seed, Time.time * 2.5f);
         Color c = bodyColor * pulse;

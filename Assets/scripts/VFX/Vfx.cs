@@ -6,7 +6,7 @@ using UnityEngine;
 /// </summary>
 public static class Vfx
 {
-    static Material additive, alpha, unlitSprite;
+    static Material additive, alpha, unlitSprite, chunks;
     static Texture2D softDot;
 
     // The materials live in Assets/Resources/VFX so their shaders are always included and
@@ -17,6 +17,19 @@ public static class Vfx
 
     /// <summary>Normal see-through particles (dust, smoke).</summary>
     public static Material Alpha => alpha != null ? alpha : alpha = Particle("VfxAlpha");
+
+    /// <summary>Solid see-through particles with hard edges (rubble, debris).</summary>
+    public static Material Chunks
+    {
+        get
+        {
+            if (chunks != null)
+                return chunks;
+            chunks = Load("VfxAlpha");
+            chunks.mainTexture = Texture2D.whiteTexture;
+            return chunks;
+        }
+    }
 
     /// <summary>For SpriteRenderers that should glow regardless of the lights (afterimages, the fire body).</summary>
     public static Material UnlitSprite => unlitSprite != null ? unlitSprite : unlitSprite = Load("VfxUnlitSprite");
