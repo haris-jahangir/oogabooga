@@ -4,8 +4,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 
 /// <summary>
-/// Tools > Oogabooga > Story: builds the opening prefab, the ending scene, and a test copy of
-/// room 1 with the opening in it, all under Assets/Story. Wire Story Into Game then puts the
+/// Tools > Oogabooga > Story: builds the opening prefab and the ending scene under Assets/Story. Wire Story Into Game then puts the
 /// story and the character art into the real levels and links Scene1 -> Scene2 -> Ending.
 /// </summary>
 public static class StoryBuilder
@@ -94,30 +93,14 @@ public static class StoryBuilder
         director.music = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/music/horror musiic.mp3");
         director.lightMusic = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/music/ending_light_piano.ogg");
         director.darkMusic = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/music/ending_dark_piano.ogg");
+        director.ambience = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/music/ending_ambience.ogg");
 
         EditorSceneManager.SaveScene(scene, "Assets/Story/Scenes/Ending.unity");
         Debug.Log("STORY ending scene saved");
     }
 
-    [MenuItem("Tools/Oogabooga/Story/Build Opening Test Scene")]
-    public static void BuildOpeningTest()
-    {
-        if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            return; // this replaces the open scene: don't lose unsaved work
-        if (AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab) == null)
-            BuildOpening();
-        // A copy of room 1 (Scene1) with the opening dropped in, so the real scene stays untouched.
-        AssetDatabase.DeleteAsset("Assets/Story/Scenes/OpeningTest.unity");
-        AssetDatabase.CopyAsset("Assets/Scenes/Scene1.unity", "Assets/Story/Scenes/OpeningTest.unity");
-        var scene = EditorSceneManager.OpenScene("Assets/Story/Scenes/OpeningTest.unity");
-        PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(OpeningPrefab), scene);
-        DressCharacters(scene);
-        EditorSceneManager.SaveScene(scene);
-        Debug.Log("STORY opening test scene saved");
-    }
-
     /// <summary>
-    /// Puts the new art on room 1's placeholder squares (in the test copy only): the player's
+    /// Puts the new art on the levels' placeholder squares: the player's
     /// frames into PlayerAnimator, the shadow's smoke onto the monster.
     /// </summary>
     static void DressCharacters(UnityEngine.SceneManagement.Scene scene)
@@ -269,7 +252,6 @@ public static class StoryBuilder
     {
         BuildOpening();
         BuildEnding();
-        BuildOpeningTest();
         WireGame();
     }
 }

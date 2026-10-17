@@ -68,6 +68,7 @@ Built with Unity 6, Claude Code and the Unity MCP.
 
 **Music**
 - `music/ending_light_piano.ogg`, `music/ending_dark_piano.ogg`: composed and synthesised by the team (`ArtSource/Story/make_piano.py`)
+- `music/ending_ambience.ogg` (dock ambience): synthesised by the team (`ArtSource/Story/make_ambience.py`)
 - `music/menu.mp3`: **[source needed]**
 - `music/horror musiic.mp3`: **[source needed]**
 - `music/chao.mp3`: **[source needed]**

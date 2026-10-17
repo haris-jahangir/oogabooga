@@ -60,6 +60,9 @@ public class EndingDirector : MonoBehaviour
     [Tooltip("Dark piano for the dark ending (fades in as the shadow takes your hand).")]
     public AudioClip darkMusic;
     [Range(0f, 1f)] public float endingMusicVolume = 0.6f;
+    [Tooltip("Night on the dock (drone, wind, water) from the first second until the choice.")]
+    public AudioClip ambience;
+    [Range(0f, 1f)] public float ambienceVolume = 0.5f;
 
     [Header("Framing")]
     [Tooltip("The backdrop's size in units. The camera always shows all of it, whatever the window shape.")]
@@ -68,7 +71,7 @@ public class EndingDirector : MonoBehaviour
     Image fade, box;
     Text speakerText, lineText, captionText, titleText, subTitleText, hintText;
     Text[] choiceTexts;
-    AudioSource sfx, fireSource, musicSource;
+    AudioSource sfx, fireSource, musicSource, ambienceSource;
     Flipbook playerFrames;
 
     IEnumerator Start()
@@ -79,6 +82,8 @@ public class EndingDirector : MonoBehaviour
         Animate(playerIdle);
         fireSource = Loop(fireLoop, 0.9f);
         musicSource = Loop(music, 0f);
+        ambienceSource = Loop(ambience, 0f);
+        StartCoroutine(FadeAudio(ambienceSource, ambienceVolume, 3f));
         BuildUI();
         SetAlpha(hospital, 0f);
         SetAlpha(shadowView, 0f);
@@ -120,6 +125,7 @@ public class EndingDirector : MonoBehaviour
     {
         yield return Walk(shadowX - 0.9f, 1.6f);
         StartCoroutine(FadeAudio(musicSource, 0f, 2f));
+        StartCoroutine(FadeAudio(ambienceSource, 0f, 2f));
         StartCoroutine(FadeAudio(fireSource, 0f, 2f));
         Play(darkSting);
         StartCoroutine(FadeAudio(Loop(darkMusic, 0f), endingMusicVolume, 4f));
@@ -140,6 +146,7 @@ public class EndingDirector : MonoBehaviour
         // Straight past the shadow and into the lamp's light; the shadow can't follow.
         StartCoroutine(ShadowRecoils());
         StartCoroutine(FadeAudio(musicSource, 0f, 3f));
+        StartCoroutine(FadeAudio(ambienceSource, 0f, 3f));
         yield return Walk(lampX, 3.2f);
         StartCoroutine(FadeAudio(fireSource, 0f, 1f));
         yield return FadeScreen(Color.white, 0f, 1f, 1.4f);

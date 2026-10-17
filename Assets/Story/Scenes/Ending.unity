@@ -301,6 +301,8 @@ MonoBehaviour:
   lightMusic: {fileID: 8300000, guid: 8ad9ba96f53b42d0b2fc22819ddc06ed, type: 3}
   darkMusic: {fileID: 8300000, guid: cee9f05910504359923d32b52462601f, type: 3}
   endingMusicVolume: 0.6
+  ambience: {fileID: 8300000, guid: 5b9c04b3cd9c42ab91104574addec0a6, type: 3}
+  ambienceVolume: 0.5
   pictureSize: {x: 17.777779, y: 10}
 --- !u!4 &919596701
 Transform:
