@@ -44,6 +44,7 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody2D rb;
     Collider2D body;
     readonly Collider2D[] ledgeHits = new Collider2D[8];
+    readonly ContactPoint2D[] contacts = new ContactPoint2D[8];
     InputAction moveAction;
     InputAction jumpAction;
     InputAction dashAction;
@@ -51,6 +52,7 @@ public class PlayerMovement : MonoBehaviour
     float baseGravityScale;
 
     float moveInput;
+    float moveInputY;
     float lastGroundedTime = float.NegativeInfinity;
     float jumpPressedTime = float.NegativeInfinity;
     bool canMove = true;
@@ -139,12 +141,15 @@ public class PlayerMovement : MonoBehaviour
         if (!CanMove || Time.frameCount == regainedFrame)
         {
             moveInput = 0f;
+            moveInputY = 0f;
             jumpPressedTime = float.NegativeInfinity;
             dashPressed = false;
             return;
         }
 
-        moveInput = moveAction.ReadValue<Vector2>().x;
+        Vector2 move = moveAction.ReadValue<Vector2>();
+        moveInput = move.x;
+        moveInputY = move.y;
         // Like Input.GetKeyDown: one tap = one jump. Holding does nothing extra.
         // Latched here and consumed in FixedUpdate so a tap is never missed between physics steps.
         if (jumpAction.WasPressedThisFrame())
@@ -201,6 +206,12 @@ public class PlayerMovement : MonoBehaviour
         // pressed a moment before. Always the same height.
         bool canJump = Time.time - lastGroundedTime <= coyoteTime;
         bool jump = Time.time - jumpPressedTime <= jumpBuffer && canJump;
+        // Down + Jump on a one-way ledge drops through it instead (like the classics).
+        if (jump && IsGrounded && moveInputY < -0.5f && DropThroughLedge())
+        {
+            jumpPressedTime = float.NegativeInfinity;
+            jump = false;
+        }
         if (jump)
         {
             jumpPressedTime = float.NegativeInfinity;
@@ -216,6 +227,33 @@ public class PlayerMovement : MonoBehaviour
         rb.linearVelocity = velocity;
     }
 
+    // Lets the player fall through the one-way ledges they stand on for a moment. False if there are none.
+    bool DropThroughLedge()
+    {
+        if (body == null)
+            return false;
+        bool dropped = false;
+        int count = body.GetContacts(contacts);
+        for (int i = 0; i < count; i++)
+        {
+            Collider2D c = contacts[i].collider;
+            if (c.usedByEffector && c.TryGetComponent(out PlatformEffector2D e) && e.useOneWay && contacts[i].normal.y > 0.5f)
+            {
+                StartCoroutine(IgnoreFor(c, 0.35f));
+                dropped = true;
+            }
+        }
+        return dropped;
+    }
+
+    System.Collections.IEnumerator IgnoreFor(Collider2D ledge, float seconds)
+    {
+        Physics2D.IgnoreCollision(body, ledge, true);
+        yield return new WaitForSeconds(seconds);
+        if (ledge != null && body != null)
+            Physics2D.IgnoreCollision(body, ledge, false);
+    }
+
     // Near the top of a jump, feet just under the top of a one-way ledge you're passing through:
     // step up onto it instead of dropping back down.
     void AssistOntoLedge(ref Vector2 velocity)
@@ -228,7 +266,8 @@ public class PlayerMovement : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Collider2D c = ledgeHits[i];
-            if (c == body || c.isTrigger || !c.usedByEffector || !c.TryGetComponent(out PlatformEffector2D e) || !e.useOneWay)
+            if (c == body || c.isTrigger || !c.usedByEffector || !c.TryGetComponent(out PlatformEffector2D e) || !e.useOneWay
+                || Physics2D.GetIgnoreCollision(body, c))   // the ledge we're dropping through
                 continue;
             float lift = c.bounds.max.y - b.min.y;
             if (lift > 0f && lift <= ledgeAssist)

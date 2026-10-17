@@ -198,6 +198,7 @@ public static class StoryBuilder
         // Playtest tuning: slower movement, more time before and while the fire rises.
         SetAll<PlayerMovement>(level2, "moveSpeed", p => p.floatValue = 6f);
         SetAll<PlayerMovement>(level2, "coyoteTime", p => p.floatValue = 0.15f);
+        MakeThinPlatformsOneWay(level2);   // the low step left over from Level 1's layout
         SetAll<Fire>(level2, "growSpeed", p => p.floatValue = 0.85f);
         SetAll<Fire>(level2, "startDelay", p => p.floatValue = 5f);
         EditorSceneManager.SaveScene(level2);
