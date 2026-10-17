@@ -145,6 +145,15 @@ public static class StoryBuilder
             Debug.LogWarning("STORY no 'monster' sprite found, shadow art not set");
     }
 
+    [MenuItem("Tools/Oogabooga/Story/Set Game Icon")]
+    public static void SetIcon()
+    {
+        var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(Art + "Icon/GameIcon.png");
+        PlayerSettings.SetIcons(UnityEditor.Build.NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
+        AssetDatabase.SaveAssets();
+        Debug.Log("STORY game icon set: " + (icon != null));
+    }
+
     /// <summary>Command line: build everything.</summary>
     public static void BuildAll()
     {
