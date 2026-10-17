@@ -148,6 +148,7 @@ public class EndingDirector : MonoBehaviour
     {
         speakerText.text = speaker;
         lineText.text = "";
+        yield return null; // don't let the press that ended the last line skip this one
         for (int i = 1; i <= line.Length; i++)
         {
             lineText.text = line.Substring(0, i);
@@ -165,8 +166,13 @@ public class EndingDirector : MonoBehaviour
     IEnumerator Choose(System.Action<int> picked)
     {
         lineText.text = "";
-        speakerText.text = "";
+        speakerText.text = "What do you do?      A / D  choose      E  confirm";
         int current = 0;
+        // The press that finished the last line is still "this frame": skip it, and wait until
+        // it's released, so the choice is always seen before it can be confirmed.
+        yield return null;
+        while (Keyboard.current != null && (Keyboard.current.eKey.isPressed || Keyboard.current.spaceKey.isPressed || Keyboard.current.enterKey.isPressed))
+            yield return null;
         foreach (Text t in choiceTexts)
             t.gameObject.SetActive(true);
         while (true)
