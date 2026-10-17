@@ -23,7 +23,7 @@ public class WakeUpIntro : MonoBehaviour
     [Tooltip("Start lying on the floor and get up once the eyes are open.")]
     public bool startLying = true;
     [Tooltip("How far the player sinks when lying down, so the body rests on the floor (units).")]
-    public float lieDrop = 0.26f;
+    public float lieDrop = 0.36f;
 
     PlayerMovement player;
     Rigidbody2D body;

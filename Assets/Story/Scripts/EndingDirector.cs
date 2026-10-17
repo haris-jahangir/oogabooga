@@ -109,7 +109,7 @@ public class EndingDirector : MonoBehaviour
 
     IEnumerator DarkEnding()
     {
-        yield return Walk(shadowX - 0.7f, 1.6f);
+        yield return Walk(shadowX - 0.9f, 1.6f);
         StartCoroutine(FadeAudio(musicSource, 0f, 2f));
         StartCoroutine(FadeAudio(fireSource, 0f, 2f));
         Play(darkSting);

@@ -51,7 +51,7 @@ MonoBehaviour:
   voiceLine: {fileID: 0}
   sway: 3
   startLying: 1
-  lieDrop: 0.26
+  lieDrop: 0.36
 --- !u!114 &38064549309765737
 MonoBehaviour:
   m_ObjectHideFlags: 0

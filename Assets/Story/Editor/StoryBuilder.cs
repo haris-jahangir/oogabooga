@@ -13,6 +13,8 @@ public static class StoryBuilder
     const string Art = "Assets/Story/Art/";
     const string UnlitMaterial = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat";
     const string OpeningPrefab = "Assets/Story/Prefabs/Opening.prefab";
+    // The player's drawing is 1.4 units tall (Player frames at 137 PPU), the shadow 1.5 times that.
+    const float PlayerHeight = 1.4f, ShadowHeight = 2.1f;
 
     /// <summary>Frames 0..3 of one animation, e.g. Frames("Player/Player_Walk").</summary>
     static Sprite[] Frames(string name) =>
@@ -75,10 +77,10 @@ public static class StoryBuilder
         director.docks = Sprite("Docks", "Ending_Docks", Vector3.zero, 0);
         director.shadowView = Sprite("Shadow's View", "Ending_ShadowView", Vector3.zero, 1);
         director.hospital = Sprite("Hospital", "Ending_Hospital", Vector3.zero, 2);
-        // Both sprites are pivoted at the body's centre: the player is 1 unit tall, the shadow 1.5.
-        director.shadow = Sprite("Shadow", "Shadow/Shadow_0", new Vector3(director.shadowX, floorY + 0.75f, 0f), 4);
+        // Both sprites are pivoted at the body's centre.
+        director.shadow = Sprite("Shadow", "Shadow/Shadow_0", new Vector3(director.shadowX, floorY + ShadowHeight / 2f, 0f), 4);
         AddFlipbook(director.shadow, Frames("Shadow/Shadow"), 7f);
-        director.player = Sprite("Player", "Player/Player_Idle_0", new Vector3(director.doorX, floorY + 0.5f, 0f), 5);
+        director.player = Sprite("Player", "Player/Player_Idle_0", new Vector3(director.doorX, floorY + PlayerHeight / 2f, 0f), 5);
         director.playerIdle = Frames("Player/Player_Idle");
         director.playerWalk = Frames("Player/Player_Walk");
         AddFlipbook(director.player, director.playerIdle, 4f);
@@ -130,6 +132,14 @@ public static class StoryBuilder
             }
             so.ApplyModifiedPropertiesWithoutUndo();
             animator.GetComponent<SpriteRenderer>().sprite = Frames("Player/Player_Idle")[0];
+            // A collider as tall as the drawing and about as wide as the body, so the player doesn't
+            // catch on edges before touching them. Raised so the feet stay where they were.
+            if (animator.TryGetComponent(out BoxCollider2D box))
+            {
+                animator.transform.position += Vector3.up * (PlayerHeight - box.size.y * animator.transform.localScale.y) / 2f;
+                box.size = new Vector2(0.55f, PlayerHeight);
+                box.offset = Vector2.zero;
+            }
         }
         else
             Debug.LogWarning("STORY no PlayerAnimator found, player art not set");

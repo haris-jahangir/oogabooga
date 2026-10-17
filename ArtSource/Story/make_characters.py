@@ -3,8 +3,9 @@
     python ArtSource/Story/make_characters.py
 
 Writes Assets/Story/Art/Player/*.png and Assets/Story/Art/Shadow/*.png (4 frames per animation,
-all the same canvas so nothing jitters). The pivot is the canvas centre = the body's centre,
-so a 1x1 collider fits the player with its feet on the ground.
+all the same canvas so nothing jitters). The pivot is the canvas centre = the body's centre.
+Imported at 137 px per unit the player is 1.4 units tall (fits a 0.55 x 1.4 collider); the
+shadow at 91 px per unit is 2.1.
 """
 import math
 from pathlib import Path
@@ -14,7 +15,7 @@ from PIL import Image, ImageFilter
 
 HERE = Path(__file__).parent
 OUT = HERE.parent.parent / "Assets/Story/Art"
-BODY = 192            # body height in pixels = 1 unit at 192 PPU
+BODY = 192            # body height in pixels (1.4 units at 137 PPU)
 CANVAS = (160, 240)   # body centred, room to stretch and tilt
 FEET = (CANVAS[0] // 2, CANVAS[1] // 2 + BODY // 2)
 EYES = [(116, 167), (165, 170)]  # in Player_Cutout.png
