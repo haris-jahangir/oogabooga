@@ -40,16 +40,13 @@ Scenes in build order: `MainMenu`, `Scene1` (Level 1), `Scene2` (Level 2), `Stor
 ## Credits
 
 **Team**
-- Haris Jahangir (KibroPixen): programming, levels, VFX, main menu
-- Shayan (S16): narrative and level design, story and cutscenes, character animation set-up, game icon
-- Fatimah Adeel: character art and animation frames, clue art
+- Haris Jahangir (KibroPixen)
+- Shayan (S16) 
+- Fatimah Adeel
+- Shafin Ali
 
 Built with Unity 6, Claude Code and the Unity MCP.
 
-**Art**
-- Player character (idle, walk, jump, scare), clue pictures: drawn by the team's artist
-- Warehouse sprites (scaffolding, pipes, crates, doors), cursor: made by the team
-- Shadow, ending backdrops (docks, shadow's view, hospital), light switch, clue props, game icon: made by the team, from the artist's drawings (generator scripts in `ArtSource/Story`)
 
 **Fonts** (licence files in `Assets/Story/Resources/Fonts`)
 - [Creepster](https://fonts.google.com/specimen/Creepster) by Font Diner, Inc. SIL Open Font License 1.1
