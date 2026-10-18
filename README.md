@@ -1,9 +1,6 @@
 # AfterLife
 
-A 2D horror side-scroller made in 3 days for the NaSCon '26 Vibe-Coding Game Dev competition.
-You wake up in a burning warehouse on Pier 3. When the lights flicker, the shadow comes: stand in the light to survive. Find the door code, outrun the fire, climb to the roof, and face the shadow at the end.
-
-Themes: **fire, shadow, time.**
+A 2D horror side-scroller. You wake up in a burning warehouse on Pier 3. When the lights flicker, the shadow comes: stand in the light to survive. Find the door code, outrun the fire, climb to the roof, and face the shadow at the end.
 
 ## How to play
 
@@ -45,7 +42,7 @@ Scenes in build order: `MainMenu`, `Scene1` (Level 1), `Scene2` (Level 2), `Stor
 **Team**
 - Haris Jahangir (KibroPixen): programming, levels, VFX, main menu
 - Shayan (S16): narrative and level design, story and cutscenes, character animation set-up, game icon
-- The team's artist(Fatimah Adeel): character art and animation frames, clue art
+- Fatimah Adeel: character art and animation frames, clue art
 
 Built with Unity 6, Claude Code and the Unity MCP.
 
